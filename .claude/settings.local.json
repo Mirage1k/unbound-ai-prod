@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Kamal\\\\Work\\\\AI RPODUCTIVITY\\\\unbound-lms\\\\backend\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Kamal\\\\Work\\\\AI RPODUCTIVITY\\\\unbound-lms\\\\frontend\\\\src\\\\pages\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Kamal\\\\Work\\\\AI RPODUCTIVITY\\\\unbound-lms\\\\frontend\\\\public\")",
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"C:\\\\Kamal\\\\Work\\\\AI RPODUCTIVITY\\\\unbound-lms\\\\data\")",
+      "Bash(npm install *)",
+      "Bash(npm --version)",
+      "Bash(node --experimental-sqlite server.js)",
+      "Bash(curl -s -X POST http://localhost:3001/api/register-interest -H \"Content-Type: application/json\" -d \"{\\\\\"name\\\\\":\\\\\"Test User\\\\\",\\\\\"email\\\\\":\\\\\"test@example.com\\\\\",\\\\\"organisation\\\\\":\\\\\"Test Org\\\\\",\\\\\"course_interest\\\\\":\\\\\"AI Learning\\\\\"}\")",
+      "Bash(curl -s http://localhost:3001/api/registrations)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git config *)"
+    ]
+  }
+}

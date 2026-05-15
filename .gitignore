@@ -1,0 +1,6 @@
+node_modules/
+data/unbound.db
+frontend/dist/
+.env
+.env.local
+*.log
