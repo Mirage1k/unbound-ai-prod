@@ -7,12 +7,15 @@ import {
   Zap, Shield, AlertTriangle, PenTool, List, Grid,
   GraduationCap, Target, ArrowRight, UserPlus, Sparkles, Star, Users
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 import {
   COURSES, MODS, LESSONS_DATA, KEY_TERMS_DATA, LESSON_CONTENT, ACT_TYPES
 } from "./data.js";
+import { QUIZ_DATA } from "./quizData.js";
+import ChatReflection from "./components/ChatReflection.jsx";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.PROD ? "" : "http://localhost:3001";
 const FONT = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
 const S = { fontFamily: "'Plus Jakarta Sans', sans-serif" };
 const LOGO_WHITE = "/UB_White__1_.png";
@@ -25,6 +28,74 @@ const COLORS = {
 };
 
 const COURSE_ICONS = { ai: Zap, hygiene: Shield, scam: AlertTriangle };
+
+// ── Progress helpers ──────────────────────────────────────────
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem("unbound_progress") || "{}"); }
+  catch { return {}; }
+}
+
+// ── Certificate generator ─────────────────────────────────────
+
+function generateCertificate(courseTitle) {
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  doc.setFillColor(10, 10, 10);
+  doc.rect(0, 0, 297, 210, "F");
+  doc.setDrawColor(80, 80, 80);
+  doc.setLineWidth(0.4);
+  doc.rect(14, 14, 269, 182);
+  doc.setDrawColor(50, 50, 50);
+  doc.setLineWidth(0.2);
+  doc.rect(18, 18, 261, 174);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(32);
+  doc.text("UnBound", 148.5, 62, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(120, 120, 120);
+  doc.text("C E R T I F I C A T E   O F   C O M P L E T I O N", 148.5, 73, { align: "center" });
+
+  doc.setDrawColor(60, 60, 60);
+  doc.setLineWidth(0.3);
+  doc.line(60, 78, 237, 78);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.setTextColor(160, 160, 160);
+  doc.text("This certifies that", 148.5, 92, { align: "center" });
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(38);
+  doc.text("Learner", 148.5, 110, { align: "center" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.setTextColor(160, 160, 160);
+  doc.text("has successfully completed", 148.5, 122, { align: "center" });
+
+  doc.setTextColor(220, 220, 220);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  const lines = doc.splitTextToSize(courseTitle, 200);
+  doc.text(lines, 148.5, 136, { align: "center" });
+
+  doc.setDrawColor(60, 60, 60);
+  doc.line(60, 148, 237, 148);
+
+  const date = new Date().toLocaleDateString("en-MY", { year: "numeric", month: "long", day: "numeric" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text(date, 148.5, 160, { align: "center" });
+  doc.text("UnBound Malaysia · Digital Skills Platform", 148.5, 185, { align: "center" });
+
+  doc.save(`UnBound-Certificate-${courseTitle.replace(/[^a-zA-Z0-9]+/g, "-")}.pdf`);
+}
 
 // ── Logo components ───────────────────────────────────────────
 
@@ -343,9 +414,9 @@ function CoursePicker({ go }) {
 
 // ── LMS Shell ─────────────────────────────────────────────────
 
-function LMSShell({ view, course, mod, lesson, go, state, setState }) {
+function LMSShell({ view, course, mod, lesson, go, state, setState, progress, markLessonComplete, saveQuizScore, isLessonDone, isModuleDone, isModuleUnlocked, isCourseDone, getCourseProgress }) {
   const set = (k, v) => setState(s => ({ ...s, [k]: v }));
-  const { mcqSel, mcqDone, reflect, glossOpen, tab } = state;
+  const { mcqSel, mcqDone, glossOpen, tab, justCompleted, quizQ, quizSel, quizAnswers, quizFinished, openDiscuss } = state;
 
   const cdata = COURSES.find(c => c.id === course);
   const mdata = mod ? MODS[course]?.find(m => m.id === mod) : null;
@@ -399,13 +470,26 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
     </div>
   );
 
-  // Dashboard view
+  // ── Dashboard ─────────────────────────────────────────────────
+  const totalLessonsAll = COURSES.reduce((a, c) =>
+    a + Object.values(LESSONS_DATA[c.id] || {}).reduce((b, arr) => b + arr.length, 0), 0);
+  const doneLessonsAll = COURSES.reduce((a, c) =>
+    a + Object.entries(progress[c.id] || {}).reduce((b, [, m]) => b + (m.lessons?.length || 0), 0), 0);
+  const completedMods = COURSES.reduce((a, c) =>
+    a + (MODS[c.id] || []).filter(m => isModuleDone(c.id, m.id)).length, 0);
+  const certCount = COURSES.filter(c => isCourseDone(c.id)).length;
+
   const dashView = (
     <div style={{ ...S, padding: "32px 40px", maxWidth: 900, margin: "0 auto" }}>
       <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Good morning 👋</h1>
       <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 14 }}>Pick up where you left off, or explore a new course.</p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 28 }}>
-        {[[BookOpen, "Courses enrolled", 1, "#4f46e5"], [CheckCircle, "Modules complete", 1, "#059669"], [Clock, "Hours logged", "2.5", "#ea580c"], [Trophy, "Certificates", 0, "#d97706"]].map(([I, l, v, c]) => (
+        {[
+          [BookOpen, "Lessons done", doneLessonsAll, "#4f46e5"],
+          [CheckCircle, "Modules done", completedMods, "#059669"],
+          [Clock, "Courses started", COURSES.filter(c => Object.keys(progress[c.id] || {}).length > 0).length, "#ea580c"],
+          [Trophy, "Certificates", certCount, "#d97706"],
+        ].map(([I, l, v, c]) => (
           <div key={l} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
               <span style={{ fontSize: 12, color: "#64748b" }}>{l}</span>
@@ -421,6 +505,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {COURSES.map(c => {
           const cl = COLORS[c.id]; const I = COURSE_ICONS[c.id];
+          const pct = getCourseProgress(c.id);
           return (
             <div key={c.id} onClick={() => go("course", c.id)} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", display: "flex", gap: 14, alignItems: "center", cursor: "pointer" }}>
               <div style={{ width: 44, height: 44, background: cl.light, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -431,14 +516,12 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
                   <h3 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{c.title}</h3>
                   {c.badge && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: cl.light, color: cl.accent, fontWeight: 600 }}>{c.badge}</span>}
                 </div>
-                {c.id === "ai" && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ flex: 1, maxWidth: 160, height: 4, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
-                      <div style={{ width: "25%", height: "100%", background: cl.accent, borderRadius: 4 }} />
-                    </div>
-                    <span style={{ fontSize: 12, color: cl.accent, fontWeight: 600 }}>25%</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, maxWidth: 160, height: 4, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ width: `${pct}%`, height: "100%", background: cl.accent, borderRadius: 4, transition: "width .5s" }} />
                   </div>
-                )}
+                  <span style={{ fontSize: 12, color: cl.accent, fontWeight: 600 }}>{pct}%</span>
+                </div>
               </div>
               <ChevronRight size={16} color="#cbd5e1" />
             </div>
@@ -448,7 +531,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
     </div>
   );
 
-  // Course (module list) view
+  // ── Course (module list) ───────────────────────────────────────
   const courseView = cdata && (
     <div style={{ ...S, padding: "32px 40px", maxWidth: 860, margin: "0 auto" }}>
       <button onClick={() => go("courses")} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#64748b", cursor: "pointer", marginBottom: 24, padding: 0, fontSize: 13 }}>
@@ -457,34 +540,36 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
       <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "22px 26px", marginBottom: 22 }}>
         <h1 style={{ margin: "0 0 6px", fontSize: 19, fontWeight: 700, color: "#0f172a" }}>{cdata.title}</h1>
         <p style={{ margin: "0 0 14px", fontSize: 13, color: "#64748b" }}>{cdata.desc}</p>
-        {cdata.id === "ai" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ flex: 1, maxWidth: 260, height: 6, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
-              <div style={{ width: "25%", height: "100%", background: col.accent, borderRadius: 4 }} />
-            </div>
-            <span style={{ fontSize: 13, color: col.accent, fontWeight: 600 }}>25% complete</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1, maxWidth: 260, height: 6, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+            <div style={{ width: `${getCourseProgress(course)}%`, height: "100%", background: col.accent, borderRadius: 4, transition: "width .5s" }} />
           </div>
-        )}
+          <span style={{ fontSize: 13, color: col.accent, fontWeight: 600 }}>{getCourseProgress(course)}% complete</span>
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(MODS[course] || []).map(m => {
-          const locked = m.status === "locked", done = m.status === "complete";
-          const active = m.status === "active" || m.status === "available";
+          const unlocked = isModuleUnlocked(course, m.id);
+          const done = isModuleDone(course, m.id);
+          const quizScore = progress[course]?.[m.id]?.quizScore;
           return (
-            <div key={m.id} onClick={() => !locked && go("module", course, m.id)}
-              style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "15px 20px", display: "flex", alignItems: "center", gap: 14, cursor: locked ? "default" : "pointer", opacity: locked ? .6 : 1 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: done ? col.accent : active ? col.light : "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                {done ? <Check size={15} color="#fff" /> : locked ? <Lock size={13} color="#94a3b8" /> : <PlayCircle size={15} color={col.accent} />}
+            <div key={m.id} onClick={() => unlocked && go("module", course, m.id)}
+              style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "15px 20px", display: "flex", alignItems: "center", gap: 14, cursor: unlocked ? "pointer" : "default", opacity: unlocked ? 1 : .55 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: done ? col.accent : unlocked ? col.light : "#f8fafc", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {done ? <Check size={15} color="#fff" /> : !unlocked ? <Lock size={13} color="#94a3b8" /> : <PlayCircle size={15} color={col.accent} />}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: locked ? "#94a3b8" : "#0f172a" }}>Module {m.id}: {m.title}</span>
-                  {done && m.score && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: "#dcfce7", color: "#166534", fontWeight: 600 }}>Quiz: {m.score}%</span>}
-                  {m.status === "active" && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>In progress</span>}
+                  <span style={{ fontSize: 14, fontWeight: 600, color: !unlocked ? "#94a3b8" : "#0f172a" }}>Module {m.id}: {m.title}</span>
+                  {done && quizScore != null && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: "#dcfce7", color: "#166534", fontWeight: 600 }}>Quiz: {quizScore}%</span>}
+                  {done && quizScore == null && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>Lessons done — quiz available</span>}
+                  {!done && unlocked && (progress[course]?.[m.id]?.lessons?.length > 0) && (
+                    <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>In progress</span>
+                  )}
                 </div>
                 <p style={{ margin: "3px 0 0", fontSize: 12, color: "#94a3b8" }}>{m.lessons} lessons · ~2–3 hrs</p>
               </div>
-              {!locked && <ChevronRight size={15} color="#cbd5e1" />}
+              {unlocked && <ChevronRight size={15} color="#cbd5e1" />}
             </div>
           );
         })}
@@ -492,7 +577,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
     </div>
   );
 
-  // Module view
+  // ── Module view ───────────────────────────────────────────────
   const moduleView = mdata && (
     <div style={{ ...S, padding: "32px 40px", maxWidth: 960, margin: "0 auto" }}>
       <button onClick={() => go("course", course)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#64748b", cursor: "pointer", marginBottom: 22, padding: 0, fontSize: 13 }}>
@@ -500,7 +585,27 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
       </button>
       <p style={{ margin: "0 0 4px", fontSize: 11, color: col.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".6px" }}>Module {mdata.id}</p>
       <h1 style={{ margin: "0 0 6px", fontSize: 21, fontWeight: 700, color: "#0f172a" }}>{mdata.title}</h1>
-      <p style={{ margin: "0 0 22px", fontSize: 13, color: "#64748b" }}>{mdata.lessons} lessons · Quiz · Worksheet · Discussion</p>
+      <p style={{ margin: "0 0 22px", fontSize: 13, color: "#64748b" }}>{mdata.lessons} lessons · Quiz · Discussion</p>
+
+      {/* Module quiz call-to-action */}
+      {isModuleDone(course, mod) && (
+        <div style={{ background: col.light, border: `1px solid ${col.muted}`, borderRadius: 12, padding: "14px 18px", marginBottom: 18, display: "flex", alignItems: "center", gap: 14 }}>
+          <Trophy size={20} color={col.accent} />
+          <div style={{ flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#0f172a" }}>All lessons complete!</p>
+            <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+              {progress[course]?.[mod]?.quizScore != null
+                ? `Your quiz score: ${progress[course][mod].quizScore}%`
+                : "Take the module quiz to test your knowledge."}
+            </p>
+          </div>
+          <button onClick={() => go("quiz", course, mod)}
+            style={{ padding: "9px 18px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+            {progress[course]?.[mod]?.quizScore != null ? "Retake Quiz" : "Take Quiz"}
+          </button>
+        </div>
+      )}
+
       <div style={{ display: "flex", gap: 22 }}>
         <div style={{ flex: "0 0 56%" }}>
           <div style={{ display: "flex", gap: 2, marginBottom: 14, background: "#f1f5f9", borderRadius: 8, padding: 3 }}>
@@ -510,25 +615,27 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
           </div>
           {tab === "lessons" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {moduleLessons.map((l, idx) => (
-                <div key={l.id} onClick={() => go("lesson", course, mdata.id, l.id)}
-                  style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: idx === 0 ? col.accent : col.light, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {idx === 0 ? <Check size={13} color="#fff" /> : <span style={{ fontSize: 12, fontWeight: 600, color: col.accent }}>{l.id}</span>}
+              {moduleLessons.map((l) => {
+                const done = isLessonDone(course, mod, l.id);
+                return (
+                  <div key={l.id} onClick={() => go("lesson", course, mdata.id, l.id)}
+                    style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: done ? col.accent : col.light, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {done ? <Check size={13} color="#fff" /> : <span style={{ fontSize: 12, fontWeight: 600, color: col.accent }}>{l.id}</span>}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#0f172a" }}>{l.title}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{l.type}</p>
+                    </div>
+                    {done && <CheckCircle size={14} color={col.accent} />}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "#0f172a" }}>{l.title}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>{l.type}</p>
-                  </div>
-                  {idx === 1 && <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>Continue</span>}
-                  {idx === 0 && <CheckCircle size={14} color={col.accent} />}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           {tab === "activities" && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {ACT_TYPES.map(({ label, color }) => (
+              {(ACT_TYPES || []).map(({ label, color }) => (
                 <div key={label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
                   <div style={{ width: 28, height: 28, borderRadius: 7, background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <CheckSquare size={13} color={color} />
@@ -543,11 +650,10 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
           {[
             [FileText, "Key terms glossary", `${moduleTerms.length} terms`],
             [BookOpen, "Reading materials", "Lessons with examples"],
-            [Download, "Downloadable worksheet", "Self-check template"],
-            [MessageSquare, "Discussion prompt", "1 compulsory response"],
-            [PenTool, "Reflection journal", "Private or submitted"],
+            [MessageSquare, "Discussion prompt", "Aria AI tutor responds"],
+            [PenTool, "Reflection journal", "Private — Aria gives feedback"],
             [Globe, "Further reading links", "Curated sources"],
-            [Award, "Module badge", "Awarded on completion"],
+            [Award, "Module quiz", "5 questions after all lessons"],
           ].map(([I, label, desc]) => (
             <div key={label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 14px", display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 30, height: 30, background: col.light, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -564,7 +670,9 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
     </div>
   );
 
-  // Lesson view
+  // ── Lesson view ───────────────────────────────────────────────
+  const lessonDone = lesson && isLessonDone(course, mod, lesson);
+
   const lessonView = currentLesson && (
     <div style={{ ...S, padding: "28px 40px", maxWidth: 800, margin: "0 auto" }}>
       <button onClick={() => go("module", course, mod)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#64748b", cursor: "pointer", marginBottom: 22, padding: 0, fontSize: 13 }}>
@@ -581,7 +689,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
         </div>
         <div style={{ display: "flex", gap: 4 }}>
           {moduleLessons.map(l => (
-            <div key={l.id} style={{ width: 26, height: 4, borderRadius: 4, background: l.id < lesson ? col.accent : l.id === lesson ? col.muted : "#e2e8f0" }} />
+            <div key={l.id} style={{ width: 26, height: 4, borderRadius: 4, background: isLessonDone(course, mod, l.id) ? col.accent : l.id === lesson ? col.muted : "#e2e8f0" }} />
           ))}
         </div>
       </div>
@@ -655,86 +763,376 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
         </div>
       )}
 
-      {/* Reflection */}
+      {/* Reflection — Aria chatbot */}
       {currentContent?.reflectionPrompt && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+        <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <PenTool size={14} color="#059669" />
             <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Reflection</span>
+            <span style={{ fontSize: 12, color: "#64748b", marginLeft: 4 }}>{currentContent.reflectionPrompt}</span>
           </div>
-          <p style={{ margin: "0 0 10px", fontSize: 14, color: "#374151" }}>{currentContent.reflectionPrompt}</p>
-          <textarea value={reflect} onChange={e => set("reflect", e.target.value)}
-            placeholder="Write your reflection here…"
-            style={{ width: "100%", height: 80, border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px", fontSize: 13, fontFamily: "inherit", color: "#374151", resize: "vertical", outline: "none", background: "#f8fafc", boxSizing: "border-box" }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>{reflect.length} chars</span>
-            <button style={{ padding: "7px 16px", borderRadius: 8, background: col.accent, color: "#fff", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>Save</button>
-          </div>
+          <ChatReflection
+            key={`reflect-${course}-${mod}-${lesson}`}
+            course={course}
+            mod={mod}
+            mode="reflection"
+          />
         </div>
       )}
 
-      {/* Discussion + Further reading */}
+      {/* Discussion */}
       {currentContent && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <MessageSquare size={13} color="#7c3aed" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Discussion</span>
-              <span style={{ marginLeft: "auto", fontSize: 10, padding: "1px 6px", borderRadius: 20, background: "#f3e8ff", color: "#7c3aed", fontWeight: 600 }}>Required</span>
-            </div>
-            <p style={{ margin: "0 0 10px", fontSize: 12, color: "#374151", lineHeight: 1.6 }}>
-              Share your thoughts on: {currentContent.reflectionPrompt}
-            </p>
-            <button style={{ width: "100%", padding: "7px", borderRadius: 8, border: "1px solid #e8d5ff", background: "#faf5ff", color: "#7c3aed", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit" }}>
-              Join discussion →
-            </button>
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <MessageSquare size={14} color="#7c3aed" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Discussion</span>
+            <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 20, background: "#f3e8ff", color: "#7c3aed", fontWeight: 600, marginLeft: 4 }}>with Aria</span>
           </div>
-          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Globe size={13} color="#0891b2" />
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Further reading</span>
-            </div>
-            {(currentContent.furtherReading || ["No links available for this lesson."]).map(link => {
-              const parts = link.split(" — ");
-              const label = parts[0];
-              const url = parts[1];
-              return (
-                <div key={link} style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 0", borderBottom: "1px solid #f1f5f9" }}>
-                  <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0891b2", flexShrink: 0 }} />
-                  {url ? (
-                    <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#0891b2", textDecoration: "none" }}>{label}</a>
-                  ) : (
-                    <span style={{ fontSize: 11, color: "#94a3b8" }}>{label}</span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <ChatReflection
+            key={`discuss-${course}-${mod}-${lesson}`}
+            course={course}
+            mod={mod}
+            mode="discussion"
+            discussionLabel={currentContent.reflectionPrompt}
+          />
         </div>
       )}
 
-      {/* Prev / Next navigation */}
-      <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 12, borderTop: "1px solid #f1f5f9" }}>
-        <button onClick={() => prevLesson ? go("lesson", course, mod, prevLesson.id) : go("module", course, mod)}
-          style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
-          <ArrowLeft size={13} /> {prevLesson ? "Previous" : "Back to module"}
-        </button>
-        <button onClick={() => nextLesson ? go("lesson", course, mod, nextLesson.id) : go("module", course, mod)}
-          style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
-          {nextLesson ? "Next" : "Complete module"} <ChevronRight size={13} />
-        </button>
+      {/* Further reading */}
+      {currentContent?.furtherReading && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 18px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <Globe size={13} color="#0891b2" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Further reading</span>
+          </div>
+          {currentContent.furtherReading.map(link => {
+            const parts = link.split(" — ");
+            const label = parts[0];
+            const url = parts[1];
+            return (
+              <div key={link} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 0", borderBottom: "1px solid #f1f5f9" }}>
+                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#0891b2", flexShrink: 0 }} />
+                {url ? (
+                  <a href={url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#0891b2", textDecoration: "none" }}>{label}</a>
+                ) : (
+                  <span style={{ fontSize: 12, color: "#94a3b8" }}>{label}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Mark complete + nav */}
+      <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+        {!lessonDone && !justCompleted && (
+          <button onClick={() => { markLessonComplete(course, mod, lesson); set("justCompleted", true); }}
+            style={{ padding: "11px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <CheckCircle size={16} /> Mark lesson as complete
+          </button>
+        )}
+        {(lessonDone || justCompleted) && (
+          <div style={{ padding: "11px", borderRadius: 8, background: "#f0fdf4", border: "1px solid #bbf7d0", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Check size={16} color="#16a34a" />
+            <span style={{ fontSize: 14, fontWeight: 600, color: "#16a34a" }}>Lesson complete</span>
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <button onClick={() => prevLesson ? go("lesson", course, mod, prevLesson.id) : go("module", course, mod)}
+            style={{ padding: "10px 20px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
+            <ArrowLeft size={13} /> {prevLesson ? "Previous" : "Back to module"}
+          </button>
+          <button onClick={() => nextLesson ? go("lesson", course, mod, nextLesson.id) : go("module", course, mod)}
+            style={{ padding: "10px 20px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 600, display: "flex", alignItems: "center", gap: 6, fontFamily: "inherit" }}>
+            {nextLesson ? "Next lesson" : "Back to module"} <ChevronRight size={13} />
+          </button>
+        </div>
       </div>
     </div>
   );
 
+  // ── Module Quiz ───────────────────────────────────────────────
+  const quizData = course && mod ? QUIZ_DATA[course]?.[mod] : null;
+  const quizQuestions = quizData?.questions || [];
+  const currentQ = quizQuestions[quizQ] || null;
+
+  const handleQuizAnswer = (optIdx) => {
+    if (quizSel != null) return;
+    set("quizSel", optIdx);
+  };
+
+  const handleQuizNext = () => {
+    const newAnswers = [...(quizAnswers || []), quizSel];
+    if (quizQ + 1 >= quizQuestions.length) {
+      const correct = newAnswers.filter((a, i) => a === quizQuestions[i].correct).length;
+      const score = Math.round((correct / quizQuestions.length) * 100);
+      saveQuizScore(course, mod, score);
+      setState(s => ({ ...s, quizAnswers: newAnswers, quizFinished: true, quizSel: null }));
+    } else {
+      setState(s => ({ ...s, quizQ: s.quizQ + 1, quizSel: null, quizAnswers: newAnswers }));
+    }
+  };
+
+  const handleQuizRetry = () => {
+    setState(s => ({ ...s, quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false }));
+  };
+
+  const quizView = quizData && (
+    <div style={{ ...S, padding: "32px 40px", maxWidth: 680, margin: "0 auto" }}>
+      <button onClick={() => go("module", course, mod)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: "#64748b", cursor: "pointer", marginBottom: 24, padding: 0, fontSize: 13 }}>
+        <ArrowLeft size={14} /> Back to module
+      </button>
+
+      {!quizFinished ? (
+        <>
+          <p style={{ margin: "0 0 4px", fontSize: 11, color: col.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".6px" }}>
+            Module {mod} Quiz — Question {quizQ + 1} of {quizQuestions.length}
+          </p>
+          <h1 style={{ margin: "0 0 6px", fontSize: 20, fontWeight: 700, color: "#0f172a" }}>{quizData.title}</h1>
+          <div style={{ display: "flex", gap: 4, marginBottom: 24 }}>
+            {quizQuestions.map((_, i) => (
+              <div key={i} style={{ flex: 1, height: 4, borderRadius: 4, background: i < quizQ ? col.accent : i === quizQ ? col.muted : "#e2e8f0" }} />
+            ))}
+          </div>
+
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, padding: "24px", marginBottom: 16 }}>
+            <p style={{ margin: "0 0 18px", fontSize: 15, color: "#0f172a", lineHeight: 1.65, fontWeight: 500 }}>{currentQ?.q}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {currentQ?.opts.map((opt, i) => {
+                const sel = quizSel === i;
+                const correct = i === currentQ.correct;
+                const show = quizSel != null;
+                return (
+                  <button key={i} onClick={() => handleQuizAnswer(i)} disabled={quizSel != null}
+                    style={{
+                      padding: "12px 16px", borderRadius: 8, fontFamily: "inherit", textAlign: "left", fontSize: 14, cursor: quizSel != null ? "default" : "pointer",
+                      border: `1.5px solid ${show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : sel ? col.accent : "#e2e8f0"}`,
+                      background: show && correct ? "#f0fdf4" : show && sel && !correct ? "#fef2f2" : sel ? col.light : "#fff",
+                      color: show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : "#374151",
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                    }}>
+                    <span>{opt}</span>
+                    {show && correct && <Check size={14} color="#16a34a" />}
+                    {show && sel && !correct && <X size={14} color="#dc2626" />}
+                  </button>
+                );
+              })}
+            </div>
+            {quizSel != null && (
+              <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: quizSel === currentQ.correct ? "#f0fdf4" : "#fef2f2" }}>
+                <p style={{ margin: 0, fontSize: 13, color: quizSel === currentQ.correct ? "#16a34a" : "#dc2626", lineHeight: 1.5 }}>
+                  {quizSel === currentQ.correct ? `✓ Correct! ` : `✗ `}{currentQ.explanation}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {quizSel != null && (
+            <button onClick={handleQuizNext}
+              style={{ width: "100%", padding: "12px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+              {quizQ + 1 < quizQuestions.length ? "Next question →" : "See results"}
+            </button>
+          )}
+        </>
+      ) : (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ width: 80, height: 80, borderRadius: "50%", background: col.light, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <Trophy size={36} color={col.accent} />
+          </div>
+          <h2 style={{ margin: "0 0 8px", fontSize: 26, fontWeight: 800, color: "#0f172a" }}>
+            {progress[course]?.[mod]?.quizScore ?? 0}%
+          </h2>
+          <p style={{ margin: "0 0 6px", fontSize: 16, color: "#374151" }}>
+            {(quizAnswers || []).filter((a, i) => a === quizQuestions[i].correct).length} of {quizQuestions.length} correct
+          </p>
+          <p style={{ margin: "0 0 28px", fontSize: 14, color: "#64748b" }}>
+            {progress[course]?.[mod]?.quizScore >= 80 ? "Excellent work! You've mastered this module." : progress[course]?.[mod]?.quizScore >= 60 ? "Good effort! Review the lessons and try again to improve." : "Keep studying and retake the quiz when ready."}
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+            <button onClick={handleQuizRetry}
+              style={{ padding: "11px 22px", borderRadius: 8, border: "1px solid #e2e8f0", background: "#fff", color: "#374151", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+              Retake quiz
+            </button>
+            <button onClick={() => go("module", course, mod)}
+              style={{ padding: "11px 22px", borderRadius: 8, border: "none", background: col.accent, color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+              Back to module
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  // ── Progress page ─────────────────────────────────────────────
+  const progressView = (
+    <div style={{ ...S, padding: "32px 40px", maxWidth: 860, margin: "0 auto" }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Your Progress</h1>
+      <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 14 }}>Track your completion across all courses and modules.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {COURSES.map(c => {
+          const cl = COLORS[c.id]; const I = COURSE_ICONS[c.id];
+          const pct = getCourseProgress(c.id);
+          return (
+            <div key={c.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ padding: "18px 22px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 42, height: 42, background: cl.light, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <I size={20} color={cl.accent} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ margin: "0 0 6px", fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{c.title}</h3>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ flex: 1, maxWidth: 200, height: 5, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: cl.accent, borderRadius: 4 }} />
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: cl.accent }}>{pct}%</span>
+                  </div>
+                </div>
+                {isCourseDone(c.id) && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 10px", borderRadius: 20, background: "#dcfce7" }}>
+                    <Trophy size={12} color="#16a34a" />
+                    <span style={{ fontSize: 11, fontWeight: 600, color: "#16a34a" }}>Complete</span>
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: "12px 22px" }}>
+                {(MODS[c.id] || []).map(m => {
+                  const done = isModuleDone(c.id, m.id);
+                  const unlocked = isModuleUnlocked(c.id, m.id);
+                  const completedLessons = (progress[c.id]?.[m.id]?.lessons || []).length;
+                  const totalLessons = LESSONS_DATA[c.id]?.[m.id]?.length || 0;
+                  const qs = progress[c.id]?.[m.id]?.quizScore;
+                  return (
+                    <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 0", borderBottom: "1px solid #f8fafc" }}>
+                      <div style={{ width: 24, height: 24, borderRadius: 7, flexShrink: 0, background: done ? cl.accent : unlocked ? cl.light : "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {done ? <Check size={12} color="#fff" /> : !unlocked ? <Lock size={10} color="#94a3b8" /> : <span style={{ fontSize: 10, fontWeight: 700, color: cl.accent }}>{completedLessons}</span>}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 13, color: unlocked ? "#374151" : "#94a3b8" }}>Module {m.id}: {m.title}</span>
+                      </div>
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{completedLessons}/{totalLessons} lessons</span>
+                      {qs != null && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: "#dcfce7", color: "#166534", fontWeight: 600 }}>Quiz {qs}%</span>}
+                      {done && qs == null && <span style={{ fontSize: 11, padding: "2px 7px", borderRadius: 20, background: cl.light, color: cl.accent, fontWeight: 600 }}>Quiz pending</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // ── Discussions page ──────────────────────────────────────────
+  const discussView = (
+    <div style={{ ...S, padding: "32px 40px", maxWidth: 800, margin: "0 auto" }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Discussions</h1>
+      <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 14 }}>Chat with Aria about each module's key topics. Your conversations stay private in your browser.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {COURSES.map(c => {
+          const cl = COLORS[c.id]; const I = COURSE_ICONS[c.id];
+          return (
+            <div key={c.id}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                <I size={16} color={cl.accent} />
+                <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{c.title}</h2>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {(MODS[c.id] || []).map(m => {
+                  const key = `${c.id}-${m.id}`;
+                  const isOpen = openDiscuss === key;
+                  return (
+                    <div key={m.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+                      <button onClick={() => set("openDiscuss", isOpen ? null : key)}
+                        style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, fontFamily: "inherit" }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: cl.light, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: cl.accent }}>{m.id}</span>
+                        </div>
+                        <span style={{ flex: 1, textAlign: "left", fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Module {m.id}: {m.title}</span>
+                        {isOpen ? <ChevronUp size={14} color="#94a3b8" /> : <ChevronDown size={14} color="#94a3b8" />}
+                      </button>
+                      {isOpen && (
+                        <div style={{ borderTop: "1px solid #f1f5f9", padding: "0" }}>
+                          <ChatReflection
+                            key={`discuss-page-${key}`}
+                            course={c.id}
+                            mod={m.id}
+                            mode="discussion"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  // ── Certificates page ─────────────────────────────────────────
+  const certsView = (
+    <div style={{ ...S, padding: "32px 40px", maxWidth: 760, margin: "0 auto" }}>
+      <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Certificates</h1>
+      <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 14 }}>Complete all lessons in a course to unlock and download your certificate.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {COURSES.map(c => {
+          const cl = COLORS[c.id]; const I = COURSE_ICONS[c.id];
+          const done = isCourseDone(c.id);
+          const pct = getCourseProgress(c.id);
+          return (
+            <div key={c.id} style={{ background: done ? "#0a0a0a" : "#fff", border: `1px solid ${done ? "#333" : "#e2e8f0"}`, borderRadius: 16, padding: "22px 26px", display: "flex", gap: 18, alignItems: "center" }}>
+              <div style={{ width: 52, height: 52, background: done ? "rgba(255,255,255,.08)" : cl.light, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                {done ? <Trophy size={24} color="#f59e0b" /> : <I size={24} color={cl.accent} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: "0 0 4px", fontSize: 15, fontWeight: 700, color: done ? "#fff" : "#0f172a" }}>{c.title}</h3>
+                {done ? (
+                  <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,.5)" }}>Certificate earned — click to download</p>
+                ) : (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ flex: 1, maxWidth: 180, height: 4, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ width: `${pct}%`, height: "100%", background: cl.accent, borderRadius: 4 }} />
+                    </div>
+                    <span style={{ fontSize: 12, color: "#94a3b8" }}>{pct}% complete</span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => done && generateCertificate(c.title)}
+                disabled={!done}
+                style={{
+                  padding: "10px 18px", borderRadius: 8, border: done ? "none" : "1px solid #e2e8f0",
+                  background: done ? "#f59e0b" : "#f8fafc", color: done ? "#000" : "#94a3b8",
+                  fontWeight: 700, fontSize: 13, cursor: done ? "pointer" : "default",
+                  fontFamily: "inherit", display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+                }}>
+                <Download size={14} /> {done ? "Download PDF" : "Locked"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ marginTop: 24, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, padding: "16px 20px" }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b", lineHeight: 1.65 }}>
+          Certificates are issued to <strong>Learner</strong> and include the course name and completion date. Download as PDF to share with employers or save to your records.
+        </p>
+      </div>
+    </div>
+  );
+
+  // ── View map ──────────────────────────────────────────────────
   const viewMap = {
     dashboard: dashView,
     course: courseView,
     module: moduleView,
     lesson: lessonView || <div style={{ ...S, padding: "48px", color: "#94a3b8", textAlign: "center" }}>Lesson not found.</div>,
-    progress: <div style={{ ...S, padding: "48px", color: "#94a3b8", textAlign: "center" }}>Progress tracker — coming soon</div>,
-    discuss: <div style={{ ...S, padding: "48px", color: "#94a3b8", textAlign: "center" }}>Discussions board — coming soon</div>,
-    certs: <div style={{ ...S, padding: "48px", color: "#94a3b8", textAlign: "center" }}>Certificates — coming soon</div>,
+    quiz: quizView || <div style={{ ...S, padding: "48px", color: "#94a3b8", textAlign: "center" }}>Quiz not available.</div>,
+    progress: progressView,
+    discuss: discussView,
+    certs: certsView,
   };
 
   return (
@@ -749,7 +1147,13 @@ function LMSShell({ view, course, mod, lesson, go, state, setState }) {
 
 export default function App() {
   const [nav, setNav] = useState({ view: "landing", course: null, mod: null, lesson: null });
-  const [lms, setLms] = useState({ mcqSel: null, mcqDone: false, reflect: "", glossOpen: false, tab: "lessons" });
+  const [lms, setLms] = useState({
+    mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
+    justCompleted: false,
+    quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
+    openDiscuss: null,
+  });
+  const [progress, setProgress] = useState(loadProgress);
 
   useEffect(() => {
     const l = document.createElement("link");
@@ -757,9 +1161,47 @@ export default function App() {
     document.head.appendChild(l);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem("unbound_progress", JSON.stringify(progress));
+  }, [progress]);
+
   const go = (view, course = null, mod = null, lesson = null) => {
+    window.scrollTo(0, 0);
     setNav({ view, course, mod, lesson });
-    setLms(s => ({ ...s, mcqSel: null, mcqDone: false, reflect: "", glossOpen: false, tab: "lessons" }));
+    setLms(s => ({
+      ...s,
+      mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
+      justCompleted: false,
+      quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
+    }));
+  };
+
+  const markLessonComplete = (c, m, l) => setProgress(p => {
+    const cur = p[c]?.[m]?.lessons || [];
+    if (cur.includes(l)) return p;
+    return { ...p, [c]: { ...p[c], [m]: { ...p[c]?.[m], lessons: [...cur, l] } } };
+  });
+
+  const saveQuizScore = (c, m, score) => setProgress(p => ({
+    ...p, [c]: { ...p[c], [m]: { ...p[c]?.[m], quizScore: score } }
+  }));
+
+  const isLessonDone = (c, m, l) => (progress[c]?.[m]?.lessons || []).includes(l);
+
+  const isModuleDone = (c, m) => {
+    const total = LESSONS_DATA[c]?.[m]?.length || 0;
+    const done = (progress[c]?.[m]?.lessons || []).length;
+    return total > 0 && done >= total;
+  };
+
+  const isModuleUnlocked = (c, m) => m === 1 || isModuleDone(c, m - 1);
+
+  const isCourseDone = (c) => (MODS[c] || []).every(m => isModuleDone(c, m.id));
+
+  const getCourseProgress = (c) => {
+    const total = Object.values(LESSONS_DATA[c] || {}).reduce((a, arr) => a + arr.length, 0);
+    const done = Object.entries(progress[c] || {}).reduce((a, [, m]) => a + (m.lessons?.length || 0), 0);
+    return total > 0 ? Math.round((done / total) * 100) : 0;
   };
 
   const { view, course, mod, lesson } = nav;
@@ -771,6 +1213,14 @@ export default function App() {
     <LMSShell
       view={view} course={course} mod={mod} lesson={lesson}
       go={go} state={lms} setState={setLms}
+      progress={progress}
+      markLessonComplete={markLessonComplete}
+      saveQuizScore={saveQuizScore}
+      isLessonDone={isLessonDone}
+      isModuleDone={isModuleDone}
+      isModuleUnlocked={isModuleUnlocked}
+      isCourseDone={isCourseDone}
+      getCourseProgress={getCourseProgress}
     />
   );
 }
