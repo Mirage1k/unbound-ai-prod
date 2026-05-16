@@ -14,6 +14,8 @@ import {
 } from "./data.js";
 import { QUIZ_DATA } from "./quizData.js";
 import ChatReflection from "./components/ChatReflection.jsx";
+import ForumDiscussions from "./components/ForumDiscussions.jsx";
+import { ACTIVITY_DEMOS } from "./components/ActivityDemos.jsx";
 
 const API_URL = import.meta.env.PROD ? "" : "http://localhost:3001";
 const FONT = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap";
@@ -414,7 +416,7 @@ function CoursePicker({ go }) {
 
 // ── LMS Shell ─────────────────────────────────────────────────
 
-function LMSShell({ view, course, mod, lesson, go, state, setState, progress, markLessonComplete, saveQuizScore, isLessonDone, isModuleDone, isModuleUnlocked, isCourseDone, getCourseProgress }) {
+function LMSShell({ view, course, mod, lesson, go, state, setState, progress, markLessonComplete, saveQuizScore, isLessonDone, isModuleDone, isModuleUnlocked, isCourseDone, getCourseProgress, forum, setForum }) {
   const set = (k, v) => setState(s => ({ ...s, [k]: v }));
   const { mcqSel, mcqDone, glossOpen, tab, justCompleted, quizQ, quizSel, quizAnswers, quizFinished, openDiscuss } = state;
 
@@ -634,15 +636,28 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
             </div>
           )}
           {tab === "activities" && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {(ACT_TYPES || []).map(({ label, color }) => (
-                <div key={label} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 8, padding: "10px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: 7, background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <CheckSquare size={13} color={color} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {(ACT_TYPES || []).map(({ label, color }) => {
+                const DemoComponent = ACTIVITY_DEMOS[label];
+                const isExpanded = state.actExpanded === label;
+                return (
+                  <div key={label} style={{ background: "#fff", border: `1px solid ${isExpanded ? color : "#e2e8f0"}`, borderRadius: 10, overflow: "hidden", transition: "border-color .2s" }}>
+                    <button onClick={() => setState(s => ({ ...s, actExpanded: s.actExpanded === label ? null : label }))}
+                      style={{ width: "100%", padding: "10px 14px", border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, fontFamily: "inherit" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 7, background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <CheckSquare size={13} color={color} />
+                      </div>
+                      <span style={{ flex: 1, textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151" }}>{label}</span>
+                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{isExpanded ? "▲ Hide" : "Try it ▼"}</span>
+                    </button>
+                    {isExpanded && DemoComponent && (
+                      <div style={{ borderTop: "1px solid #f1f5f9", padding: "12px" }}>
+                        <DemoComponent col={col} />
+                      </div>
+                    )}
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 500, color: "#374151" }}>{label}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -776,24 +791,6 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
             course={course}
             mod={mod}
             mode="reflection"
-          />
-        </div>
-      )}
-
-      {/* Discussion */}
-      {currentContent && (
-        <div style={{ marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-            <MessageSquare size={14} color="#7c3aed" />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Discussion</span>
-            <span style={{ fontSize: 11, padding: "1px 7px", borderRadius: 20, background: "#f3e8ff", color: "#7c3aed", fontWeight: 600, marginLeft: 4 }}>with Aria</span>
-          </div>
-          <ChatReflection
-            key={`discuss-${course}-${mod}-${lesson}`}
-            course={course}
-            mod={mod}
-            mode="discussion"
-            discussionLabel={currentContent.reflectionPrompt}
           />
         </div>
       )}
@@ -1025,51 +1022,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
 
   // ── Discussions page ──────────────────────────────────────────
   const discussView = (
-    <div style={{ ...S, padding: "32px 40px", maxWidth: 800, margin: "0 auto" }}>
-      <h1 style={{ margin: "0 0 4px", fontSize: 22, fontWeight: 700, color: "#0f172a" }}>Discussions</h1>
-      <p style={{ margin: "0 0 28px", color: "#64748b", fontSize: 14 }}>Chat with Aria about each module's key topics. Your conversations stay private in your browser.</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {COURSES.map(c => {
-          const cl = COLORS[c.id]; const I = COURSE_ICONS[c.id];
-          return (
-            <div key={c.id}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <I size={16} color={cl.accent} />
-                <h2 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#0f172a" }}>{c.title}</h2>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {(MODS[c.id] || []).map(m => {
-                  const key = `${c.id}-${m.id}`;
-                  const isOpen = openDiscuss === key;
-                  return (
-                    <div key={m.id} style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
-                      <button onClick={() => set("openDiscuss", isOpen ? null : key)}
-                        style={{ width: "100%", padding: "12px 16px", border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, fontFamily: "inherit" }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: cl.light, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, color: cl.accent }}>{m.id}</span>
-                        </div>
-                        <span style={{ flex: 1, textAlign: "left", fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Module {m.id}: {m.title}</span>
-                        {isOpen ? <ChevronUp size={14} color="#94a3b8" /> : <ChevronDown size={14} color="#94a3b8" />}
-                      </button>
-                      {isOpen && (
-                        <div style={{ borderTop: "1px solid #f1f5f9", padding: "0" }}>
-                          <ChatReflection
-                            key={`discuss-page-${key}`}
-                            course={c.id}
-                            mod={m.id}
-                            mode="discussion"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <ForumDiscussions forum={forum} setForum={setForum} />
   );
 
   // ── Certificates page ─────────────────────────────────────────
@@ -1151,7 +1104,11 @@ export default function App() {
     mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
     justCompleted: false,
     quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
-    openDiscuss: null,
+    actExpanded: null,
+  });
+  const [forum, setForum] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("unbound_forum") || "{}"); }
+    catch { return {}; }
   });
   const [progress, setProgress] = useState(loadProgress);
 
@@ -1165,6 +1122,10 @@ export default function App() {
     localStorage.setItem("unbound_progress", JSON.stringify(progress));
   }, [progress]);
 
+  useEffect(() => {
+    localStorage.setItem("unbound_forum", JSON.stringify(forum));
+  }, [forum]);
+
   const go = (view, course = null, mod = null, lesson = null) => {
     window.scrollTo(0, 0);
     setNav({ view, course, mod, lesson });
@@ -1173,6 +1134,7 @@ export default function App() {
       mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
       justCompleted: false,
       quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
+      actExpanded: null,
     }));
   };
 
@@ -1221,6 +1183,8 @@ export default function App() {
       isModuleUnlocked={isModuleUnlocked}
       isCourseDone={isCourseDone}
       getCourseProgress={getCourseProgress}
+      forum={forum}
+      setForum={setForum}
     />
   );
 }
