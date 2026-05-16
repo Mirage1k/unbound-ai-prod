@@ -418,7 +418,7 @@ function CoursePicker({ go }) {
 
 function LMSShell({ view, course, mod, lesson, go, state, setState, progress, markLessonComplete, saveQuizScore, isLessonDone, isModuleDone, isModuleUnlocked, isCourseDone, getCourseProgress, forum, setForum }) {
   const set = (k, v) => setState(s => ({ ...s, [k]: v }));
-  const { mcqSel, mcqDone, glossOpen, tab, justCompleted, quizQ, quizSel, quizAnswers, quizFinished, openDiscuss } = state;
+  const { mcqSel, mcqDone, mcqIdx, glossOpen, deepReadOpen, tab, justCompleted, quizQ, quizSel, quizAnswers, quizFinished, openDiscuss } = state;
 
   const cdata = COURSES.find(c => c.id === course);
   const mdata = mod ? MODS[course]?.find(m => m.id === mod) : null;
@@ -637,27 +637,63 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
           )}
           {tab === "activities" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {(ACT_TYPES || []).map(({ label, color }) => {
-                const DemoComponent = ACTIVITY_DEMOS[label];
-                const isExpanded = state.actExpanded === label;
+              <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b" }}>Activities embedded in this module's lessons:</p>
+              {moduleLessons.map((l) => {
+                const done = isLessonDone(course, mod, l.id);
+                const lContent = LESSON_CONTENT[course]?.[mod]?.[l.id];
+                const mcqArr = lContent?.mcq ? (Array.isArray(lContent.mcq) ? lContent.mcq : [lContent.mcq]) : [];
+                const hasDeepRead = !!(lContent?.deepReading);
+                const activityTypes = [];
+                if (mcqArr.length > 0) activityTypes.push(`Quiz (${mcqArr.length} question${mcqArr.length > 1 ? "s" : ""})`);
+                if (hasDeepRead) activityTypes.push("Deep reading");
+                if (lContent?.reflectionPrompt) activityTypes.push("Reflection");
+                // infer from lesson type string
+                const typeStr = l.type || "";
+                if (typeStr.includes("example")) activityTypes.push("Examples");
+                if (typeStr.includes("scenario")) activityTypes.push("Scenarios");
+                if (typeStr.includes("checklist")) activityTypes.push("Checklist");
+                if (typeStr.includes("worksheet") || typeStr.includes("Activity") || typeStr.includes("activity")) activityTypes.push("Practice");
+                if (typeStr.includes("Prompt Bank") || typeStr.includes("prompt bank")) activityTypes.push("Prompt bank");
+                if (typeStr.includes("matching")) activityTypes.push("Matching");
+                if (typeStr.includes("game") || typeStr.includes("decision")) activityTypes.push("Decision game");
+                if (typeStr.includes("workflow")) activityTypes.push("Workflow");
                 return (
-                  <div key={label} style={{ background: "#fff", border: `1px solid ${isExpanded ? color : "#e2e8f0"}`, borderRadius: 10, overflow: "hidden", transition: "border-color .2s" }}>
-                    <button onClick={() => setState(s => ({ ...s, actExpanded: s.actExpanded === label ? null : label }))}
-                      style={{ width: "100%", padding: "10px 14px", border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, fontFamily: "inherit" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 7, background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                        <CheckSquare size={13} color={color} />
-                      </div>
-                      <span style={{ flex: 1, textAlign: "left", fontSize: 13, fontWeight: 500, color: "#374151" }}>{label}</span>
-                      <span style={{ fontSize: 11, color: "#94a3b8" }}>{isExpanded ? "▲ Hide" : "Try it ▼"}</span>
-                    </button>
-                    {isExpanded && DemoComponent && (
-                      <div style={{ borderTop: "1px solid #f1f5f9", padding: "12px" }}>
-                        <DemoComponent col={col} />
-                      </div>
-                    )}
+                  <div key={l.id} onClick={() => go("lesson", course, mdata.id, l.id)}
+                    style={{ background: "#fff", border: `1px solid ${done ? col.muted : "#e2e8f0"}`, borderRadius: 10, padding: "11px 14px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: 8, flexShrink: 0, background: done ? col.accent : col.light, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 1 }}>
+                      {done ? <Check size={12} color="#fff" /> : <span style={{ fontSize: 11, fontWeight: 700, color: col.accent }}>{l.id}</span>}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "#0f172a" }}>{l.title}</p>
+                      {activityTypes.length > 0 ? (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                          {activityTypes.map(t => (
+                            <span key={t} style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>{t}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>Reading</p>
+                      )}
+                    </div>
+                    <ChevronRight size={13} color="#94a3b8" style={{ marginTop: 4 }} />
                   </div>
                 );
               })}
+              {/* Module-level quiz */}
+              <div onClick={() => go("quiz", course, mod)}
+                style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "11px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: col.light, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Trophy size={13} color={col.accent} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: "0 0 2px", fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Module Final Quiz</p>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>10 questions</span>
+                    <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 20, background: col.light, color: col.accent, fontWeight: 600 }}>Timed quiz</span>
+                  </div>
+                </div>
+                <ChevronRight size={13} color="#94a3b8" />
+              </div>
             </div>
           )}
         </div>
@@ -741,42 +777,93 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
         </div>
       )}
 
-      {/* MCQ */}
-      {currentContent?.mcq && (
-        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <CheckSquare size={14} color={col.accent} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Check your understanding</span>
-            <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8" }}>Multiple choice · 1 pt</span>
-          </div>
-          <p style={{ margin: "0 0 12px", fontSize: 14, color: "#374151", lineHeight: 1.6 }}>{currentContent.mcq.q}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            {currentContent.mcq.opts.map((opt, i) => {
-              const sel = mcqSel === i, correct = i === currentContent.mcq.correct, show = mcqDone;
-              return (
-                <button key={i} disabled={mcqDone} onClick={() => { set("mcqSel", i); set("mcqDone", true); }}
-                  style={{ padding: "10px 14px", borderRadius: 8, fontFamily: "inherit", border: `1.5px solid ${show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : sel ? col.accent : "#e2e8f0"}`, background: show && correct ? "#f0fdf4" : show && sel && !correct ? "#fef2f2" : sel ? col.light : "#fff", cursor: mcqDone ? "default" : "pointer", textAlign: "left", fontSize: 13, color: show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : "#374151", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <span>{opt}</span>
-                  {show && correct && <Check size={13} color="#16a34a" />}
-                  {show && sel && !correct && <X size={13} color="#dc2626" />}
-                </button>
-              );
-            })}
-          </div>
-          {mcqDone && (
-            <div style={{ marginTop: 10, padding: "9px 13px", borderRadius: 8, background: mcqSel === currentContent.mcq.correct ? "#f0fdf4" : "#fef2f2" }}>
-              <p style={{ margin: 0, fontSize: 13, color: mcqSel === currentContent.mcq.correct ? "#16a34a" : "#dc2626" }}>
-                {mcqSel === currentContent.mcq.correct ? `✓ Correct! ${currentContent.mcq.explanation}` : `✗ ${currentContent.mcq.explanation}`}
-              </p>
+      {/* Deep Reading */}
+      {currentContent?.deepReading && currentContent.deepReading.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, marginBottom: 14, overflow: "hidden" }}>
+          <button onClick={() => set("deepReadOpen", !deepReadOpen)}
+            style={{ width: "100%", padding: "12px 18px", border: "none", background: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", fontFamily: "inherit" }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", display: "flex", alignItems: "center", gap: 8 }}>
+              <BookOpen size={14} color={col.accent} /> Deep Reading
+              <span style={{ fontSize: 11, fontWeight: 400, color: "#94a3b8" }}>Extended content — for deeper understanding</span>
+            </span>
+            {deepReadOpen ? <ChevronUp size={14} color="#64748b" /> : <ChevronDown size={14} color="#64748b" />}
+          </button>
+          {deepReadOpen && (
+            <div style={{ borderTop: "1px solid #f1f5f9", padding: "14px 20px" }}>
+              {currentContent.deepReading.map((para, i) => (
+                <p key={i} style={{ margin: i < currentContent.deepReading.length - 1 ? "0 0 14px" : 0, fontSize: 14, color: "#374151", lineHeight: 1.8 }}>{para}</p>
+              ))}
             </div>
-          )}
-          {mcqDone && (
-            <button onClick={() => { set("mcqSel", null); set("mcqDone", false); }} style={{ marginTop: 10, padding: "6px 14px", borderRadius: 6, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
-              Retake
-            </button>
           )}
         </div>
       )}
+
+      {/* MCQ — supports single object or array of questions */}
+      {currentContent?.mcq && (() => {
+        const mcqArr = Array.isArray(currentContent.mcq) ? currentContent.mcq : [currentContent.mcq];
+        const clampedIdx = Math.min(mcqIdx || 0, mcqArr.length - 1);
+        const currentMcq = mcqArr[clampedIdx];
+        const totalQs = mcqArr.length;
+        return (
+          <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <CheckSquare size={14} color={col.accent} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Check your understanding</span>
+              <span style={{ marginLeft: "auto", fontSize: 11, color: "#94a3b8" }}>
+                Question {clampedIdx + 1} of {totalQs}
+              </span>
+            </div>
+            {totalQs > 1 && (
+              <div style={{ display: "flex", gap: 3, marginBottom: 12 }}>
+                {mcqArr.map((_, i) => (
+                  <div key={i} style={{ flex: 1, height: 3, borderRadius: 3, background: i < clampedIdx ? col.accent : i === clampedIdx ? col.muted : "#e2e8f0" }} />
+                ))}
+              </div>
+            )}
+            <p style={{ margin: "0 0 12px", fontSize: 14, color: "#374151", lineHeight: 1.6 }}>{currentMcq.q}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {currentMcq.opts.map((opt, i) => {
+                const sel = mcqSel === i, correct = i === currentMcq.correct, show = mcqDone;
+                return (
+                  <button key={i} disabled={mcqDone} onClick={() => { set("mcqSel", i); set("mcqDone", true); }}
+                    style={{ padding: "10px 14px", borderRadius: 8, fontFamily: "inherit", border: `1.5px solid ${show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : sel ? col.accent : "#e2e8f0"}`, background: show && correct ? "#f0fdf4" : show && sel && !correct ? "#fef2f2" : sel ? col.light : "#fff", cursor: mcqDone ? "default" : "pointer", textAlign: "left", fontSize: 13, color: show && correct ? "#16a34a" : show && sel && !correct ? "#dc2626" : "#374151", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>{opt}</span>
+                    {show && correct && <Check size={13} color="#16a34a" />}
+                    {show && sel && !correct && <X size={13} color="#dc2626" />}
+                  </button>
+                );
+              })}
+            </div>
+            {mcqDone && (
+              <div style={{ marginTop: 10, padding: "9px 13px", borderRadius: 8, background: mcqSel === currentMcq.correct ? "#f0fdf4" : "#fef2f2" }}>
+                <p style={{ margin: 0, fontSize: 13, color: mcqSel === currentMcq.correct ? "#16a34a" : "#dc2626" }}>
+                  {mcqSel === currentMcq.correct ? `✓ Correct! ${currentMcq.explanation}` : `✗ ${currentMcq.explanation}`}
+                </p>
+              </div>
+            )}
+            {mcqDone && (
+              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                <button onClick={() => { set("mcqSel", null); set("mcqDone", false); }}
+                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", cursor: "pointer", fontSize: 12, fontFamily: "inherit" }}>
+                  Retake
+                </button>
+                {clampedIdx + 1 < totalQs && (
+                  <button onClick={() => { setState(s => ({ ...s, mcqSel: null, mcqDone: false, mcqIdx: clampedIdx + 1 })); }}
+                    style={{ padding: "6px 14px", borderRadius: 6, border: "none", background: col.accent, color: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 600, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                    Next question <ChevronRight size={12} />
+                  </button>
+                )}
+                {clampedIdx > 0 && (
+                  <button onClick={() => { setState(s => ({ ...s, mcqSel: null, mcqDone: false, mcqIdx: clampedIdx - 1 })); }}
+                    style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid #e2e8f0", background: "#fff", color: "#64748b", cursor: "pointer", fontSize: 12, fontFamily: "inherit", display: "flex", alignItems: "center", gap: 4 }}>
+                    <ArrowLeft size={12} /> Previous
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Reflection — Aria chatbot */}
       {currentContent?.reflectionPrompt && (
@@ -1101,7 +1188,7 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
 export default function App() {
   const [nav, setNav] = useState({ view: "landing", course: null, mod: null, lesson: null });
   const [lms, setLms] = useState({
-    mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
+    mcqSel: null, mcqDone: false, mcqIdx: 0, glossOpen: false, deepReadOpen: false, tab: "lessons",
     justCompleted: false,
     quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
     actExpanded: null,
@@ -1131,7 +1218,7 @@ export default function App() {
     setNav({ view, course, mod, lesson });
     setLms(s => ({
       ...s,
-      mcqSel: null, mcqDone: false, glossOpen: false, tab: "lessons",
+      mcqSel: null, mcqDone: false, mcqIdx: 0, glossOpen: false, deepReadOpen: false, tab: "lessons",
       justCompleted: false,
       quizQ: 0, quizSel: null, quizAnswers: [], quizFinished: false,
       actExpanded: null,
