@@ -358,6 +358,13 @@ export const LESSON_CONTENT = {
           "For summarising, AI can condense articles, meeting notes, reports, research material, and policy documents. Example: 'Summarise the following meeting notes into key points, action items, and next steps.' For brainstorming, AI can generate project names, campaign ideas, presentation topics, lesson activities, and problem-solving approaches. Example: 'Give me 10 ideas for a beginner-friendly workshop on online safety for university students.'",
           "For planning, AI can create weekly plans, study schedules, project timelines, and meeting agendas. For learning, AI can explain difficult concepts simply — 'Explain blockchain in simple terms using an everyday example.' AI can help with basic data understanding too, identifying patterns in tables or summarising key trends. Always check AI-generated content — especially facts, data, and calculations.",
         ],
+        examples: [
+          { label: "Email drafting", prompt: "Write a polite email to my manager explaining that I need to move our meeting from Monday to Wednesday. Keep it professional and under 120 words." },
+          { label: "Summarising notes", prompt: "Summarise the following meeting notes into key points, action items, and next steps." },
+          { label: "Brainstorming", prompt: "Give me 10 ideas for a beginner-friendly workshop on online safety for university students." },
+          { label: "Planning", prompt: "Create a weekly plan for a project manager who has five tasks to complete this week. Group them by priority and suggest a realistic order." },
+          { label: "Learning explanation", prompt: "Explain blockchain in simple terms using one everyday example." },
+        ],
         mcq: [
           { q:"You have a blank page and need ideas for a workshop title. What is a suitable way to use AI?", opts:["Ask AI to generate title options, then choose and refine the best one","Ask AI to approve the event budget","Upload private participant data","Ask AI to make a legal decision about the workshop"], correct:0, explanation:"Brainstorming titles is a low-risk, high-value AI task — AI generates options and the human selects and refines. All other options involve risks AI should not handle." },
           { q:"A student has 20 pages of notes and wants to revise faster. Which AI task is most suitable?", opts:["Ask AI to summarise the notes into key points for review","Ask AI to guarantee the student will pass","Ask AI to replace studying completely","Ask AI to submit the exam answers"], correct:0, explanation:"Summarising notes into key points is a perfect AI task — it saves time and helps revision. The other options are inappropriate or impossible for AI." },
@@ -371,6 +378,12 @@ export const LESSON_CONTENT = {
           "AI is useful, but it has real limits. A responsible AI user understands not only what AI can do, but also what it cannot do well. First: AI can make mistakes. AI-generated answers may contain errors even when the answer sounds confident. Always verify important facts. Second: AI can invent information — sometimes called a hallucination. Ask for sources, check the original source yourself, and do not rely on AI alone for factual claims.",
           "Third: AI may not know the latest information. Some AI tools do not have access to real-time data, so they may be wrong about current laws, recent news, updated prices, or latest research. Always check official or updated sources for current information. Fourth: AI may misunderstand context. AI only knows what you provide in the prompt. A vague prompt produces a vague or unsuitable answer.",
           "Fifth: AI may reflect bias. AI systems are trained on large amounts of data that may include social, cultural, gender, racial, or political biases. Review AI outputs critically, especially when the topic involves people, culture, identity, or decision-making. Sixth: AI should not replace professional advice for high-stakes decisions — medical, legal, financial, mental health, or hiring decisions must involve qualified people.",
+        ],
+        scenarios: [
+          { title: "The confident wrong answer", description: "A learner asks AI what the current interest rate for a home loan is. AI gives a specific, confident answer. But the information is outdated — the rate has changed since AI's knowledge cutoff. The learner submits this to a bank form. Lesson: always check current financial, legal, or policy information with official sources." },
+          { title: "The invented citation", description: "A student asks AI to provide a source for a claim about youth unemployment. AI produces a research paper title, author, and journal. The student cites it in their essay. When the supervisor searches for the paper, it does not exist. AI invented the citation. Lesson: always verify sources before citing them." },
+          { title: "Biased output in hiring", description: "A recruiter uses AI to screen job applications. The AI consistently ranks male applicants higher because it learned from historical data where leadership roles were mostly held by men. The recruiter accepts the AI ranking without reviewing it. Lesson: always review AI decisions involving people for potential bias." },
+          { title: "Wrong medical advice", description: "A person asks AI what medication to take for chest pain. AI provides a general suggestion based on common descriptions. The person follows the advice and delays seeing a doctor. Lesson: AI should not be used for medical diagnosis or treatment decisions — always consult a qualified professional." },
         ],
         deepReading: [
           "To understand how artificial intelligence works, we first need to understand that AI does not 'think' in the same way humans do. When humans think, we use lived experience, memory, emotion, judgement, values, culture, and context. AI systems, on the other hand, work by processing data and identifying patterns. They do not truly understand the world in the human sense. They calculate, predict, classify, and generate outputs based on what they have learned from data.",
@@ -393,6 +406,13 @@ export const LESSON_CONTENT = {
           "Responsible AI use means using AI in a way that is safe, fair, thoughtful, and accountable. Before using AI, ask yourself: Is this task suitable for AI? Am I sharing private information? Could the AI output be wrong? Does this need human review? Could this affect someone unfairly?",
           "Avoid uploading sensitive or confidential information into public AI tools. Do not upload passwords, bank details, identity card or passport numbers, private addresses, medical records, student records, customer data, client documents, internal company documents, confidential government information, or any information you do not have permission to share. A simple rule: if you would not post it publicly or share it with a stranger, think carefully before putting it into an AI tool.",
           "You can reduce risk by: removing names and personal details, using fictional or sample data, summarising sensitive information instead of uploading the full document, checking your organisation's AI policy, verifying important facts, reviewing tone and accuracy before sending AI-generated content, and keeping human responsibility for final decisions. Example: instead of pasting a customer's full details, anonymise the situation and ask for general guidance.",
+        ],
+        checklist: [
+          "Is this task suitable for AI? (brainstorming, drafting, and summarising are usually suitable; medical, legal, and confidential decisions are not)",
+          "Am I sharing private information? (avoid uploading names, ID numbers, bank details, medical records, or confidential documents)",
+          "Could the AI output be wrong? (verify facts, statistics, dates, and sources before using them)",
+          "Does this need human review? (any output that will be shared, submitted, or used for decisions needs a human check)",
+          "Could this affect someone unfairly? (review AI outputs involving people for possible bias, assumptions, or incomplete perspectives)",
         ],
         mcq: [
           { q:"A staff member wants AI to help draft a customer service response. Which version is safest?", opts:["Paste the customer's full name, address, phone number, and account details","Remove personal details and describe the situation generally","Upload the full internal customer file","Include the customer's identity number for accuracy"], correct:1, explanation:"Removing personal details before using AI protects customer privacy and is the responsible approach. Never paste identifiable customer data into a public AI tool." },
@@ -449,6 +469,11 @@ export const LESSON_CONTENT = {
           "Example prompt: 'Write a polite email to my project team explaining that tomorrow's meeting will be moved to Friday because the client has requested more preparation time. Keep it professional and under 120 words.' This prompt specifies: Task (write an email), Context (meeting moved, client reason), Format (email), Tone (polite and professional), Constraint (under 120 words).",
           "This is stronger than 'Write an email.' because the better prompt gives AI direction — it tells AI what to write, who it is for, what happened, how it should sound, and how long it should be. You do not need to use every part every time, but the more relevant parts you include, the better your output.",
         ],
+        activity: {
+          title: "Prompt Formula Practice",
+          description: "Practise building complete prompts using the 5-part formula: Task + Context + Format + Tone + Constraints.",
+          instructions: "Take each weak prompt below and rewrite it using the full formula. Add as many parts as are relevant to the situation.\n\n1. Weak: 'Write an email.'\nRewrite using: Task + Context (who? about what?) + Format (email) + Tone (formal/friendly?) + Constraint (word count?)\n\n2. Weak: 'Summarise this.'\nRewrite: What should be summarised? For whom? In what format? How long?\n\n3. Weak: 'Give me a plan.'\nRewrite: What kind of plan? For what goal? Over what timeframe? What details should be included?\n\nFor each rewritten prompt, explain which parts you added and why they make it stronger.",
+        },
         mcq: [
           { q:"Which part of a prompt explains what you want AI to do?", opts:["Task","Colour","Password","Device type"], correct:0, explanation:"Task is the first and most essential part of a prompt — it tells AI the specific action you want it to perform (write, summarise, compare, plan, etc.)." },
           { q:"In the prompt 'Write a friendly reminder email to students about submitting their assignment by Friday,' what is the tone?", opts:["Friday","Students","Friendly","Assignment"], correct:2, explanation:"Tone describes how the message should sound — 'friendly' is the tone indicator in this prompt, not the audience (students) or the deadline (Friday)." },
@@ -463,6 +488,11 @@ export const LESSON_CONTENT = {
           "More examples: Summary — Weak: 'Summarise this.' Strong: 'Summarise the following article into five bullet points. Focus on the main argument, key evidence, and any recommendations. Use simple language.' Brainstorming — Weak: 'Give me ideas.' Strong: 'Give me 10 low-budget activity ideas for a 1-hour AI awareness workshop for university students. The activities should be interactive and beginner-friendly.'",
           "Planning — Weak: 'Make a plan.' Strong: 'Create a 5-day study plan for a beginner learner preparing for an AI literacy quiz. The learner has 1 hour per day. Include topics, tasks, and a short revision activity for each day.' A strong prompt does not need to be long — it needs to be clear and give AI enough context to do the task well.",
         ],
+        activity: {
+          title: "Weak to Strong Prompt Rewriter",
+          description: "Practise identifying what makes a prompt weak and rewriting it to be stronger.",
+          instructions: "For each weak prompt below, identify what is missing and rewrite it as a strong prompt:\n\n1. 'Write a report.'\n(Missing: topic, audience, length, structure, purpose)\n\n2. 'Explain something.'\n(Missing: what to explain, for whom, how simply, what format)\n\n3. 'Help me plan my week.'\n(Missing: what tasks, what constraints, what format, what priority method)\n\n4. 'Make this better.'\n(Missing: what to improve, what dimension — clarity? tone? length? — and for what audience)\n\nAfter rewriting all four, reflect: What is the most common missing element in weak prompts? What single addition made the biggest improvement?",
+        },
         deepReading: [
           "Responsible prompting means the user remains in control of the final work. AI can help generate ideas, but the user must decide which ideas are useful. AI can draft text, but the user must check whether the text is accurate. AI can explain concepts, but the user must verify important information. AI can improve language, but the user must ensure the meaning is still their own. The user should not surrender judgement to the machine.",
           "Prompting also requires awareness of privacy and data protection. Users should avoid entering sensitive personal information, private company data, confidential documents, passwords, identification numbers, bank details, medical records, or information about other people without permission. A good rule: do not put anything into an AI tool that you would not be comfortable sharing in a less controlled digital environment, unless your organisation has approved the tool for that use.",
@@ -482,6 +512,11 @@ export const LESSON_CONTENT = {
           "Useful follow-up prompts include: Make it shorter. Make it more formal. Make it friendlier. Explain it more simply. Turn this into bullet points. Turn this into a table. Give me three alternatives. Add examples. Remove repeated points. Check if anything is unclear. What assumptions did you make? What information is missing? Ask me questions before answering. Review your answer and suggest improvements.",
           "Iteration is important because AI output is not always perfect on the first try. You still need to guide it. AI tools are better when you treat them like a working draft partner, not a final answer machine.",
         ],
+        activity: {
+          title: "Follow-Up Prompting Chain",
+          description: "Practise improving an AI response through a series of follow-up prompts.",
+          instructions: "Step 1: Use this starting prompt in an AI tool:\n'Write a short paragraph explaining why digital safety is important for university students.'\n\nStep 2: Review the AI response. Identify one thing you want to change (too long, too formal, too generic, missing an example).\n\nStep 3: Write a follow-up prompt to fix that issue. Examples:\n- 'Make it shorter and more direct.'\n- 'Add one specific real-world example.'\n- 'Make the tone friendlier for first-year students.'\n- 'Remove the generic phrases and make it more specific.'\n\nStep 4: Review the new response and write another follow-up to improve it further.\n\nStep 5: Reflect: How did the response change with each follow-up? Which follow-up made the biggest difference?",
+        },
         deepReading: [
           "Follow-up prompting is one of the most important skills in using AI well because the first prompt is rarely the best prompt. When you give AI an instruction, the system can only respond based on the information, context, and direction you provide at that moment. If the first prompt is too broad or missing important details, the AI will usually produce a general answer. This does not mean the AI has failed — it means the instruction was not yet specific enough.",
           "The first answer from AI should often be treated as a draft, not a final product. Just like human writing, the first version is usually incomplete. It may have useful points, but it may also be too generic, too long, too short, or not aligned with your actual purpose. Follow-up prompting allows you to shape the response until it becomes clearer, more accurate, and more relevant. For example, after getting a basic paragraph about teamwork, you could follow up: 'Make this more suitable for university students doing a group project. Include communication, shared responsibility, and conflict resolution. Make it sound natural and not too generic.'",
@@ -502,6 +537,16 @@ export const LESSON_CONTENT = {
           "Brainstorming prompt — use when you need ideas: 'Give me 15 ideas for a beginner-friendly digital safety campaign for university students. The ideas should be low-cost, interactive, and suitable for social media.' Planning prompt — use to organise tasks or timelines: 'Create a 2-week action plan for preparing a short presentation. Include daily tasks, estimated time, and a final review day.' Explanation prompt — use to understand a concept: 'Explain generative AI in simple language for someone with no technical background. Use one everyday example.'",
           "Comparison prompt — use to compare options: 'Compare online learning and face-to-face learning in a table. Include advantages, limitations, and best use cases.' Checklist prompt — use for practical steps: 'Create a checklist for reviewing an AI-generated report before submitting it. Include accuracy, privacy, tone, and completeness.' Review prompt — use to critique or improve something: 'Review the following email for clarity, tone, and professionalism. Suggest improvements without changing the meaning.' The key is to match the prompt style to the output you need.",
         ],
+        promptBank: [
+          { type: "Summary", prompt: "Summarise this [article/text/notes] into [number] bullet points. Focus on [main idea/action items/key terms]. Use [simple/professional] language." },
+          { type: "Email", prompt: "Write a [polite/professional/friendly] email to [recipient] about [situation]. Keep the tone [tone] and under [word count] words." },
+          { type: "Brainstorming", prompt: "Give me [number] ideas for [topic or task]. The ideas should be [characteristic: low-cost, interactive, beginner-friendly] and suitable for [audience]." },
+          { type: "Planning", prompt: "Create a [duration] action plan for [goal or project]. Include [tasks/deadlines/daily steps/a checklist for each stage]." },
+          { type: "Explanation", prompt: "Explain [concept] in simple language for [audience]. Use one everyday example and define [number] key terms I should understand." },
+          { type: "Comparison", prompt: "Compare [Option A] and [Option B] in a table. Include [advantages/limitations/best use cases/cost/difficulty]." },
+          { type: "Checklist", prompt: "Create a checklist for [task or situation]. Include steps for [dimension 1], [dimension 2], and [dimension 3]. Keep each point concise and actionable." },
+          { type: "Review", prompt: "Review this [email/report/paragraph] for [clarity/tone/professionalism/accuracy]. Suggest improvements without changing the meaning." },
+        ],
         mcq: [
           { q:"Which prompt is best for a summary task?", opts:["Summarise this article into five bullet points and highlight the main idea.","Make it blue.","Create a password.","Open my file."], correct:0, explanation:"A summary prompt needs to specify what to produce (bullet points), how many, and what to focus on — the first option does all of this correctly." },
           { q:"Which prompt is best for comparing two options?", opts:["Compare Option A and Option B in a table with advantages, limitations, and best use cases.","Write anything.","Make this longer with no structure.","Ignore the differences."], correct:0, explanation:"A comparison prompt should specify the format (table), the subjects being compared, and the dimensions of comparison (advantages, limitations, use cases)." },
@@ -515,6 +560,14 @@ export const LESSON_CONTENT = {
           "A strong prompt can improve the AI response, but it does not guarantee that the response is correct. You still need to review the output. Before using AI-generated content, check: Accuracy — are the facts, dates, names, figures, and claims correct? Does this need a reliable source? Relevance — does the answer match the task? Did AI answer the actual question? Is anything missing? Tone — is the tone suitable for the audience? Is it too formal, too casual, or too vague?",
           "Also check: Privacy — did I include private information? Does the output reveal sensitive details? Should names, identity numbers, or internal information be removed? Bias and fairness — could this output be unfair to a person or group? Does it make assumptions? Does it need a more balanced view? Human judgement — would I be comfortable taking responsibility for this? Do I understand the output? Should a human expert review this before it is used?",
           "A useful final prompt: 'Review your answer. Identify any assumptions, missing information, possible errors, and parts that should be verified.' Another useful prompt: 'Before I use this, create a checklist of what I should verify.' Prompting does not remove responsibility — the person using the AI output is still responsible for checking it before sharing, submitting, or publishing it.",
+        ],
+        checklist: [
+          "Accuracy — Are the facts, dates, names, figures, and claims correct? Does any claim need a reliable source?",
+          "Relevance — Does the answer match the actual task? Did AI answer the question asked? Is anything missing or off-topic?",
+          "Tone — Is the tone suitable for the intended audience? Is it too formal, too casual, or too vague for the situation?",
+          "Privacy — Did my prompt include private information? Does the output reveal sensitive details that should be removed?",
+          "Bias and fairness — Could this output be unfair to a person or group? Does it make assumptions? Does it need a more balanced view?",
+          "Human judgement — Would I be comfortable taking responsibility for this output? Do I understand it fully? Should a human expert review it before use?",
         ],
         activity: {
           title: "Prompt Practice Sheet",
@@ -537,6 +590,12 @@ export const LESSON_CONTENT = {
           "AI can support communication tasks such as drafting emails, rewriting unclear messages, making a message more polite or more concise, creating follow-up messages, changing tone for different audiences, and turning bullet points into a full message. Example: 'Write a polite email to my manager explaining that I need to move our meeting from Tuesday morning to Thursday afternoon because of a scheduling conflict. Keep it professional and under 120 words.'",
           "AI can help you write faster, but it should not remove your responsibility for the final message. Before using an AI-generated email, check: Is the information accurate? Is the tone suitable? Does it sound like something I would actually send? Did AI add anything that is not true? Does the message include any private or sensitive information?",
         ],
+        examples: [
+          { label: "Moving a meeting", prompt: "Write a polite email to my manager explaining that I need to move our meeting from Tuesday morning to Thursday afternoon because of a scheduling conflict. Keep it professional and under 120 words." },
+          { label: "Team reminder", prompt: "Write a polite message to my project team reminding them to submit their weekly updates by Friday 5pm. Keep it friendly, clear, and under 80 words." },
+          { label: "Apology email", prompt: "Write a short professional email to a client apologising for a delayed delivery. Explain that we will update them within 24 hours. Keep it polite, clear, and under 100 words." },
+          { label: "Changing tone", prompt: "Rewrite the following message to sound more polite and professional. Keep the same core information but remove any phrases that sound too direct or abrupt." },
+        ],
         deepReading: [
           "AI is becoming one of the most important productivity tools in the modern workplace because it changes how quickly people can complete everyday tasks. Productivity does not only mean doing more work in less time. It also means using your time, attention, and energy more effectively. Many tasks that used to take hours — such as drafting emails, preparing outlines, summarising documents, organising ideas, creating lesson materials, analysing basic data, or planning schedules — can now be supported by AI. This allows you to spend less time on repetitive work and more time on thinking, decision-making, creativity, and problem-solving. For example, instead of starting from a blank page, you can ask AI to generate a first draft, suggest a structure, identify missing points, or turn rough notes into a clearer format. The final judgement still belongs to you, but AI helps reduce the time and mental effort needed to begin.",
           "Keeping ahead is important because AI is no longer a future skill. It is quickly becoming a basic workplace skill. In the same way that previous generations had to learn how to use computers, search engines, email, spreadsheets, and presentation tools, today's students and workers need to understand how to use AI effectively. People who know how to use AI well may be able to complete tasks faster, communicate more clearly, learn new topics more independently, and produce stronger work. This does not mean that AI replaces human ability. Instead, it increases the value of people who know how to combine human judgement with AI support. The advantage does not come from simply using AI, but from knowing how to ask better questions, check the output, improve the response, and apply it in a real situation.",
@@ -556,6 +615,11 @@ export const LESSON_CONTENT = {
           "AI can help learners work with long or messy information. This includes meeting notes, articles, reports, long emails, training materials, and research notes. Summarising is useful because many productivity tasks start with too much information. AI can help organise that information into a clearer structure.",
           "AI can help create short summaries, bullet point notes, executive summaries, action item lists, report outlines, key findings, comparison tables, and simplified explanations. Example: 'Summarise the following notes into key points, action items, risks, and next steps. Do not add information that is not included in the notes.' This prompt is useful because it asks AI to structure the information and tells AI not to invent missing details.",
           "When using AI for summaries and reports, learners should check whether the main meaning has been preserved. AI may accidentally remove important details or make a point sound stronger than it really is. Always compare the AI summary against the original information before using it.",
+        ],
+        examples: [
+          { label: "Meeting notes summary", prompt: "Summarise the following notes into key points, action items, risks, and next steps. Do not add information that is not included in the notes." },
+          { label: "Report from bullet points", prompt: "Turn these bullet points into a short report with headings. Use clear and professional language. Keep the report under 500 words." },
+          { label: "Executive summary", prompt: "Summarise this document for a manager who needs to make a decision. Include the main issue, key findings, risks, recommendations, and action items." },
         ],
         deepReading: [
           "One of the most useful ways to use AI is for summarising information and preparing reports. In school, university, and the workplace, people often need to read long documents, meeting notes, articles, research papers, feedback forms, emails, or data reports. These materials can take a long time to understand, especially when they are complex or poorly organised. AI can help by extracting the main points, identifying key themes, simplifying difficult information, and turning messy notes into a clearer structure. This makes it easier for you to understand what matters, what needs action, and what information should be shared with others.",
@@ -577,6 +641,11 @@ export const LESSON_CONTENT = {
           "AI can support meeting and admin tasks such as creating meeting agendas, preparing discussion questions, turning notes into minutes, identifying action items, writing follow-up emails, creating task tables, preparing checklists, and organising admin reminders. Before a meeting: 'Create a 30-minute meeting agenda for a discussion about improving customer service response time. Include objectives, discussion points, and expected outcomes.' After a meeting: 'Turn these meeting notes into minutes. Include decisions made, action items, owners, deadlines, and unresolved questions.'",
           "AI is useful for structure, but it cannot know what actually happened beyond the notes you provide. If your notes are incomplete, the AI output may also be incomplete. Review the output and confirm that decisions, owners, and deadlines are correct before sharing it with others.",
         ],
+        examples: [
+          { label: "Before a meeting (agenda)", prompt: "Create a 30-minute meeting agenda for a discussion about improving customer service response time. Include objectives, discussion points, and expected outcomes." },
+          { label: "After a meeting (minutes)", prompt: "Turn these meeting notes into minutes. Include decisions made, action items, owners, deadlines, and unresolved questions." },
+          { label: "Follow-up email", prompt: "Write a short follow-up email to meeting attendees summarising the key decisions and next steps. Keep it professional and under 150 words." },
+        ],
         mcq: [
           { q:"Which AI task is useful before a meeting?", opts:["A. Creating a meeting agenda","B. Approving a legal contract automatically","C. Sharing private passwords","D. Replacing all attendees"], correct:0, explanation:"Creating a meeting agenda — with objectives, discussion points, and expected outcomes — is a safe and practical use of AI that helps meetings run more efficiently." },
           { q:"Which detail should be checked before sharing AI-generated meeting minutes?", opts:["A. Decisions, action items, owners, and deadlines","B. Only the colour of the document","C. Whether the minutes are vague","D. Whether AI added jokes"], correct:0, explanation:"Meeting minutes are used for accountability. Decisions, action items, owners, and deadlines must be confirmed against actual meeting records before distribution." },
@@ -591,6 +660,11 @@ export const LESSON_CONTENT = {
           "AI can support planning tasks such as creating weekly plans, breaking goals into steps, prioritising tasks, creating study schedules, planning events, preparing project timelines, creating reminders and checklists, and organising tasks by urgency and importance. Example: 'Create a weekly work plan based on the tasks below. Group them by priority, suggest a realistic order, and identify which tasks may need follow-up.'",
           "AI can suggest a structure, but learners still need to decide what is realistic. AI may not know deadlines, energy levels, team capacity, or hidden constraints unless the learner explains them. Use AI to create a draft plan, then adjust it based on real priorities and time available.",
         ],
+        examples: [
+          { label: "Weekly work plan", prompt: "Create a weekly work plan based on the tasks below. Group them by priority, suggest a realistic order, and identify which tasks may need follow-up." },
+          { label: "Project action plan", prompt: "Turn this project goal into a 2-week action plan. Include tasks, suggested deadlines, and a short checklist for each stage." },
+          { label: "Priority organiser", prompt: "Here are my tasks for this week. Group them by urgent, important, and low priority. Suggest what I should do first and what can wait." },
+        ],
         mcq: [
           { q:"A learner has many scattered tasks. How can AI help?", opts:["A. Organise tasks into priorities and a weekly plan","B. Remove all deadlines automatically","C. Make final decisions without the learner","D. Hide unfinished tasks"], correct:0, explanation:"Turning scattered tasks into a prioritised weekly plan is a practical and safe use of AI that helps learners start rather than feeling overwhelmed." },
           { q:"Why should learners adjust an AI-generated plan?", opts:["A. AI may not know real deadlines, workload, or personal constraints","B. AI plans are always perfect","C. Plans should never be reviewed","D. AI cannot create any structure"], correct:0, explanation:"AI does not know your calendar, energy levels, or team dynamics. Every AI-generated plan is a draft that must be adapted to real constraints." },
@@ -604,6 +678,15 @@ export const LESSON_CONTENT = {
           "AI-generated writing often needs editing. It may be too long, too formal, too generic, too confident, or not specific enough for the situation. Editing is the step that turns an AI draft into something usable. Learners should not treat the first AI output as final.",
           "When editing AI output, check: Clarity — Is the meaning easy to understand? Accuracy — Are all facts correct? Tone — Is it suitable for the audience? Length — Is it too long or too short? Specificity — Is it too generic? Privacy — Does it reveal sensitive information? Voice — Does it sound appropriate for the sender or organisation?",
           "Useful editing prompts include: 'Rewrite this to be clearer and more concise while keeping the same meaning.' 'Make this sound more professional but not too formal.' 'Review this message and identify any claims, promises, or assumptions that should be checked before sending.' Learners should remember that AI can improve writing, but it can also remove nuance — edit the output so it fits the purpose, audience, and real situation.",
+        ],
+        checklist: [
+          "Clarity — Is the meaning easy to understand? Would someone unfamiliar with the topic follow it easily?",
+          "Accuracy — Are all facts, names, dates, figures, and claims correct?",
+          "Tone — Is the tone suitable for the intended audience and situation (formal, friendly, professional)?",
+          "Length — Is it too long or too short for the purpose?",
+          "Specificity — Is it too generic? Does it need more detail or context for this specific situation?",
+          "Privacy — Does the output reveal any sensitive, personal, or confidential information that should be removed?",
+          "Voice — Does it sound appropriate for the sender or organisation? Does it sound human and genuine?",
         ],
         deepReading: [
           "Digital sanitation refers to the habit of keeping your digital work clean, safe, organised, and responsible. Just as physical sanitation protects health in the real world, digital sanitation protects information, privacy, security, and trust in the digital world. When using AI, digital sanitation becomes even more important because you may be copying, uploading, generating, editing, and sharing large amounts of information. If you are not careful, you may accidentally expose private data, spread false information, use outdated material, or publish content that has not been properly checked. Good digital sanitation helps you use AI safely and responsibly.",
@@ -624,6 +707,13 @@ export const LESSON_CONTENT = {
           "Using AI once can be helpful. Building a simple AI productivity system is more useful because it gives learners a repeatable way to work. A productivity system is a set of prompts, habits, and checks that learners can use again and again.",
           "A simple AI productivity system can include: an email prompt (Write a polite email about [situation] for [audience]. Keep it [tone] and under [length].), a summary prompt (Summarise the following text into key points, action items, and next steps. Do not add new information.), a meeting prompt (Create a meeting agenda for [topic]. Include objectives, discussion points, and expected outcomes.), a planning prompt (Create a weekly plan from these tasks. Group them by priority and suggest a realistic order.), and a review prompt (Review this output for accuracy, tone, privacy, and missing information before I use it.).",
           "A good AI productivity system does not remove thinking. It helps learners organise work faster, then gives them a clear point to review and improve the final output. Save useful prompts and reuse them. Improve the prompts when you notice better ways to get the output you need.",
+        ],
+        promptBank: [
+          { type: "Email", prompt: "Write a polite email about [situation] for [audience]. Keep it [tone] and under [length]." },
+          { type: "Summary", prompt: "Summarise the following text into key points, action items, and next steps. Do not add new information." },
+          { type: "Meeting agenda", prompt: "Create a meeting agenda for [topic]. Include objectives, discussion points, and expected outcomes." },
+          { type: "Weekly plan", prompt: "Create a weekly plan from these tasks. Group them by priority and suggest a realistic order." },
+          { type: "Review", prompt: "Review this output for accuracy, tone, privacy, and missing information before I use it." },
         ],
         activity: {
           title: "AI Productivity Toolkit",
@@ -646,6 +736,11 @@ export const LESSON_CONTENT = {
           "AI can support research and learning by helping you: summarise articles and reports, explain difficult concepts in simple language, create study notes, compare different viewpoints, generate research questions, organise messy notes, create outlines for essays or reports, and identify what information may need verification. Example: 'Summarise the following article into five bullet points. Identify the main argument, supporting points, and questions I should verify before using the information.'",
           "AI is especially useful at the beginning of research, when you are trying to understand a topic, organise your thoughts, or decide what questions to ask next. Use AI to help you understand and structure information, then verify important facts before using them in serious work.",
         ],
+        examples: [
+          { label: "Article summary with verification", prompt: "Summarise the following article into five bullet points. Identify the main argument, supporting points, and questions I should verify before using the information." },
+          { label: "Concept explanation", prompt: "Explain renewable energy in simple language for a beginner. Use one everyday example and include three terms I should understand." },
+          { label: "Research questions", prompt: "Explain digital literacy in simple language. Then give me five research questions and list what claims I should verify with reliable sources." },
+        ],
         deepReading: [
           "AI can be a useful research assistant because it helps you explore topics, organise information, and understand complex ideas more quickly. Research often begins with uncertainty. You may not yet know the right keywords, the main debates, the important questions, or the structure of the topic. AI can help at this early stage by explaining background concepts, suggesting research questions, identifying related themes, comparing viewpoints, and helping you build an outline. This helps you move from a broad topic into a clearer research direction.",
           "AI is especially helpful when you are trying to understand difficult material. You can ask AI to explain a concept in simpler language, summarise a long article, define technical terms, or compare two theories. This can make research feel less overwhelming, especially when you are dealing with academic papers, policy documents, reports, or unfamiliar subjects. AI can also help you turn messy notes into organised sections, create reading questions, or identify what information is missing.",
@@ -665,6 +760,14 @@ export const LESSON_CONTENT = {
           "AI-generated answers can sound confident even when they are incomplete, outdated, or wrong. This is why source checking is an important skill. When AI gives you information, ask yourself: Is this a factual claim? Does this claim need a source? Is the source official, reliable, and current? Could the information be outdated? Is the answer missing another point of view? Could AI have invented a name, statistic, quote, or reference?",
           "You can also ask AI to help you identify what needs to be checked. Example: 'Review the answer below. List any claims, numbers, dates, names, or recommendations that should be verified with reliable sources before I use it.' Another useful prompt: 'Create a fact-checking checklist for this research summary. Include what I should verify, what sources I should look for, and what information may be missing.'",
           "Reliable sources may include official government websites, academic journals or university publications, official company or organisation pages, reputable news organisations, published reports from recognised institutions, and original source documents. Be careful with unsupported claims, old statistics, copied quotations, and strong recommendations. The more important the decision, the more carefully the information should be checked.",
+        ],
+        checklist: [
+          "Is this a factual claim that requires a reliable source?",
+          "Is the source official, credible, and current?",
+          "Could the information be outdated (past AI's knowledge cutoff)?",
+          "Is the answer missing another important point of view?",
+          "Could the AI have invented a name, statistic, quote, or reference?",
+          "Can I find the original source document and confirm it says what AI claims?",
         ],
         deepReading: [
           "Source checking is one of the most important skills when using AI for research, writing, and learning. AI can generate answers quickly, but it does not always show where the information comes from. Sometimes it may provide information without sources. Sometimes it may mention sources that are incomplete, outdated, or even incorrect. This creates a problem because good research depends on evidence. If you cannot identify where a claim comes from, you cannot fully judge whether it is trustworthy.",
@@ -686,6 +789,12 @@ export const LESSON_CONTENT = {
           "A weak prompt: 'Make slides about AI.' A stronger prompt: 'Create a 5-slide presentation outline about responsible AI for beginner university students. Include slide titles, key points, and one simple example for each slide.' You can also ask AI to create speaker notes: 'Write short speaker notes for each slide. Keep the tone clear, confident, and beginner-friendly.'",
           "AI can help you organise your presentation, but you still need to check whether the message is accurate, relevant, and suitable for the audience. Before using AI-generated slides or scripts, check: Is the structure clear? Is the information accurate? Is the language suitable for the audience? Are there too many points on each slide? Does the presentation have a clear opening and closing? Are any claims unsupported?",
         ],
+        examples: [
+          { label: "Weak prompt", prompt: "Make slides about AI." },
+          { label: "Strong prompt", prompt: "Create a 5-slide presentation outline about responsible AI for beginner university students. Include slide titles, key points, and one simple example for each slide." },
+          { label: "Speaker notes follow-up", prompt: "Write short speaker notes for each slide. Keep the tone clear, confident, and beginner-friendly." },
+          { label: "Audience adaptation", prompt: "Rewrite these slide key points so they are suitable for senior managers who are not technical. Remove jargon and focus on business impact." },
+        ],
         mcq: [
           { q:"Which prompt is strongest for creating a presentation outline?", opts:["A. 'Make slides.'","B. 'Create a 5-slide presentation outline about responsible AI for beginner students, with slide titles and key points.'","C. 'Do presentation.'","D. 'Make it nice.'"], correct:1, explanation:"A strong presentation prompt specifies number of slides, topic, audience, and required elements — giving AI enough context to produce a useful structure." },
           { q:"What should a learner check before using AI-generated speaker notes?", opts:["A. Accuracy, audience suitability, and clarity","B. Only the font colour","C. Whether AI wrote them quickly","D. Whether the notes are very long"], correct:0, explanation:"Speaker notes must be accurate, appropriate for the audience, and clear — all three dimensions matter before using AI-generated content in a real presentation." },
@@ -699,6 +808,11 @@ export const LESSON_CONTENT = {
           "AI can help turn one idea into different content formats. This is called repurposing. For example, one short article can become: a LinkedIn post, a short script, a presentation outline, an infographic outline, a newsletter section, a checklist, a social media caption, or a discussion question.",
           "AI is useful when you already have an idea but need help changing the format, shortening it, or adapting it for a different audience. Example prompt: 'Turn the following article into three LinkedIn post options. Each option should have a different angle: educational, reflective, and practical. Keep each post under 180 words.' Another example: 'Create an infographic outline about online safety. Include a title, five key points, and one short caption for each point.'",
           "Content creation still needs human review. AI-generated content can sound generic, exaggerated, or inaccurate. It may also miss cultural context or audience sensitivity. Before publishing AI-assisted content, check: Does it sound accurate? Does it match the audience? Does it sound too generic? Are the claims supported? Is the tone appropriate? Is there any private or copyrighted material? Does the final version still reflect your intended message?",
+        ],
+        examples: [
+          { label: "LinkedIn post options", prompt: "Turn the following article into three LinkedIn post options. Each option should have a different angle: educational, reflective, and practical. Keep each post under 180 words." },
+          { label: "Infographic outline", prompt: "Create an infographic outline about online safety. Include a title, five key points, and one short caption for each point." },
+          { label: "Multiple format repurpose", prompt: "Turn this explanation into one LinkedIn post, one short script, and one infographic outline. Keep the meaning the same and make it suitable for beginner learners." },
         ],
         mcq: [
           { q:"What does repurposing content mean?", opts:["A. Turning one idea into different formats for different uses","B. Deleting all content","C. Copying private files into AI","D. Publishing without review"], correct:0, explanation:"Content repurposing means adapting one idea into different formats — such as turning a report into a social media post or a script into a checklist — for different audiences or uses." },
@@ -714,6 +828,11 @@ export const LESSON_CONTENT = {
           "Example: Weekly reporting workflow — 1. Collect notes and updates. 2. Remove private or unnecessary information. 3. Use AI to organise the notes into sections. 4. Use AI to draft the first report. 5. Check facts, figures, and missing information. 6. Edit the tone and final message. 7. Share the final report. AI can support workflows such as weekly planning, meeting summaries, research briefs, content creation, customer response drafts, study revision, presentation preparation, and report writing.",
           "When designing an AI workflow, ask: What task do I want to improve? What parts are repetitive or time-consuming? Where can AI help with structure, ideas, drafts, or summaries? What information should not be shared? Where is human review required? What prompt can I reuse? What should the final output look like? The best workflows are simple enough to repeat. They should make work easier, not more confusing.",
         ],
+        examples: [
+          { label: "Workflow design prompt", prompt: "Help me design an AI-supported workflow for preparing a weekly project update. Include steps before using AI, prompts to use, human review points, and final output format." },
+          { label: "Organise notes for drafting", prompt: "Turn these rough notes into organised sections for: progress this week, challenges, decisions made, and next steps. Do not add information that is not in the notes." },
+          { label: "Draft weekly update", prompt: "Turn these organised notes into a professional weekly project update. Use clear language, keep it under 400 words, and use headings for each section." },
+        ],
         mcq: [
           { q:"What is an AI workflow?", opts:["A. A repeatable process where AI supports specific steps of a task","B. A rule that AI must make every final decision","C. A private password list","D. A way to avoid checking outputs"], correct:0, explanation:"An AI workflow is a structured, repeatable process that uses AI at specific points to improve efficiency, while keeping humans responsible for review and final decisions." },
           { q:"Which step should be included in a responsible AI workflow?", opts:["A. Human review before final use","B. Uploading all private information","C. Removing all accountability","D. Publishing without checking"], correct:0, explanation:"Every responsible AI workflow must include a human review step before the output is used, shared, or submitted — this is where accuracy, tone, and privacy are checked." },
@@ -727,6 +846,16 @@ export const LESSON_CONTENT = {
           "Before using AI-generated outputs, learners should complete a final responsible AI check. This is especially important when the output will be shared, submitted, published, or used to support a decision.",
           "Use this checklist before finalising AI-assisted work: Accuracy — Are the facts, names, dates, figures, and claims correct? Source — Does important information need to be verified with a reliable source? Privacy — Did I remove private, sensitive, or confidential information? Bias and fairness — Could this output be unfair, incomplete, or based on assumptions? Tone — Is the tone suitable for the audience and situation? Completeness — Is anything important missing? Context — Does this fit the real situation? Human accountability — Am I comfortable taking responsibility for the final output?",
           "Useful final review prompts include: 'Review this output for accuracy, privacy, tone, bias, missing information, and assumptions. List what I should check before using it.' Responsible AI use is not only about avoiding mistakes. It is about making sure the final work is useful, fair, accurate, and appropriate for the real world.",
+        ],
+        checklist: [
+          "Accuracy — Are the facts, names, dates, figures, and claims correct?",
+          "Source — Does important information need to be verified with a reliable source?",
+          "Privacy — Did I remove private, sensitive, or confidential information?",
+          "Bias and fairness — Could this output be unfair, incomplete, or based on assumptions?",
+          "Tone — Is the tone suitable for the audience and situation?",
+          "Completeness — Is anything important missing?",
+          "Context — Does this fit the real situation I will use it in?",
+          "Human accountability — Am I comfortable taking responsibility for the final output?",
         ],
         deepReading: [
           "Responsible AI means using artificial intelligence in a way that is ethical, safe, fair, accurate, and respectful of people. AI is powerful because it can help us learn faster, work more efficiently, and solve problems at a larger scale. However, the same power can create harm if it is used carelessly. AI can spread misinformation, expose private data, produce biased results, encourage overdependence, or make decisions that affect people unfairly. This is why responsible AI is not only the responsibility of technology companies or governments. It is also the responsibility of every person who uses AI.",

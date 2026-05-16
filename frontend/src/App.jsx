@@ -647,16 +647,11 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
                 if (mcqArr.length > 0) activityTypes.push(`Quiz (${mcqArr.length} question${mcqArr.length > 1 ? "s" : ""})`);
                 if (hasDeepRead) activityTypes.push("Deep reading");
                 if (lContent?.reflectionPrompt) activityTypes.push("Reflection");
-                // infer from lesson type string
-                const typeStr = l.type || "";
-                if (typeStr.includes("example")) activityTypes.push("Examples");
-                if (typeStr.includes("scenario")) activityTypes.push("Scenarios");
-                if (typeStr.includes("checklist")) activityTypes.push("Checklist");
-                if (typeStr.includes("worksheet") || typeStr.includes("Activity") || typeStr.includes("activity")) activityTypes.push("Practice");
-                if (typeStr.includes("Prompt Bank") || typeStr.includes("prompt bank")) activityTypes.push("Prompt bank");
-                if (typeStr.includes("matching")) activityTypes.push("Matching");
-                if (typeStr.includes("game") || typeStr.includes("decision")) activityTypes.push("Decision game");
-                if (typeStr.includes("workflow")) activityTypes.push("Workflow");
+                if (lContent?.examples?.length > 0) activityTypes.push("Examples");
+                if (lContent?.scenarios?.length > 0) activityTypes.push("Scenarios");
+                if (lContent?.checklist?.length > 0) activityTypes.push("Checklist");
+                if (lContent?.activity) activityTypes.push("Practice activity");
+                if (lContent?.promptBank?.length > 0) activityTypes.push("Prompt bank");
                 return (
                   <div key={l.id} onClick={() => go("lesson", course, mdata.id, l.id)}
                     style={{ background: "#fff", border: `1px solid ${done ? col.muted : "#e2e8f0"}`, borderRadius: 10, padding: "11px 14px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -798,6 +793,74 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
         </div>
       )}
 
+      {/* Examples */}
+      {currentContent?.examples?.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <Sparkles size={14} color={col.accent} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Examples</span>
+          </div>
+          {currentContent.examples.map((ex, i) => (
+            typeof ex === "string"
+              ? <div key={i} style={{ background: col.light, borderRadius: 8, padding: "10px 14px", marginBottom: i < currentContent.examples.length - 1 ? 8 : 0, fontSize: 13, color: "#374151", fontStyle: "italic", lineHeight: 1.65 }}>{ex}</div>
+              : <div key={i} style={{ marginBottom: i < currentContent.examples.length - 1 ? 10 : 0 }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: col.accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>{ex.label}</p>
+                  <div style={{ background: col.light, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#374151", fontStyle: "italic", lineHeight: 1.65 }}>{ex.prompt}</div>
+                </div>
+          ))}
+        </div>
+      )}
+
+      {/* Scenarios */}
+      {currentContent?.scenarios?.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <Users size={14} color={col.accent} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Scenarios</span>
+          </div>
+          {currentContent.scenarios.map((sc, i) => (
+            typeof sc === "string"
+              ? <div key={i} style={{ background: col.light, borderRadius: 8, padding: "12px 14px", marginBottom: i < currentContent.scenarios.length - 1 ? 10 : 0, fontSize: 13, color: "#374151", lineHeight: 1.7 }}>{sc}</div>
+              : <div key={i} style={{ background: col.light, borderRadius: 8, padding: "12px 14px", marginBottom: i < currentContent.scenarios.length - 1 ? 10 : 0 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 700, color: "#0f172a" }}>{sc.title}</p>
+                  <p style={{ margin: 0, fontSize: 13, color: "#374151", lineHeight: 1.7 }}>{sc.description}</p>
+                </div>
+          ))}
+        </div>
+      )}
+
+      {/* Checklist */}
+      {currentContent?.checklist?.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <CheckSquare size={14} color={col.accent} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Checklist</span>
+          </div>
+          {currentContent.checklist.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: i < currentContent.checklist.length - 1 ? 8 : 0 }}>
+              <div style={{ width: 16, height: 16, borderRadius: 4, border: `2px solid ${col.muted}`, flexShrink: 0, marginTop: 2 }} />
+              <span style={{ fontSize: 13, color: "#374151", lineHeight: 1.65 }}>{item}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Prompt Bank */}
+      {currentContent?.promptBank?.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+            <List size={14} color={col.accent} />
+            <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a" }}>Prompt bank</span>
+          </div>
+          {currentContent.promptBank.map((pb, i) => (
+            <div key={i} style={{ marginBottom: i < currentContent.promptBank.length - 1 ? 12 : 0 }}>
+              <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, color: col.accent, textTransform: "uppercase", letterSpacing: "0.05em" }}>{pb.type}</p>
+              <div style={{ background: col.light, borderRadius: 8, padding: "10px 14px", fontSize: 13, color: "#374151", fontStyle: "italic", lineHeight: 1.65 }}>{pb.prompt}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* MCQ — supports single object or array of questions */}
       {currentContent?.mcq && (() => {
         const mcqArr = Array.isArray(currentContent.mcq) ? currentContent.mcq : [currentContent.mcq];
@@ -864,6 +927,26 @@ function LMSShell({ view, course, mod, lesson, go, state, setState, progress, ma
           </div>
         );
       })()}
+
+      {/* Practice Activity */}
+      {currentContent?.activity && (
+        <div style={{ background: "#fff", border: `2px solid ${col.muted}`, borderRadius: 12, padding: "18px 22px", marginBottom: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: col.light, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Target size={14} color={col.accent} />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>Practice Activity: {currentContent.activity.title}</p>
+              <p style={{ margin: 0, fontSize: 11, color: "#64748b" }}>{currentContent.activity.description}</p>
+            </div>
+          </div>
+          <div style={{ background: col.light, borderRadius: 8, padding: "12px 14px" }}>
+            {currentContent.activity.instructions.split('\n\n').map((para, i) => (
+              <p key={i} style={{ margin: i < currentContent.activity.instructions.split('\n\n').length - 1 ? "0 0 10px" : 0, fontSize: 13, color: "#374151", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{para}</p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Reflection — Aria chatbot */}
       {currentContent?.reflectionPrompt && (
